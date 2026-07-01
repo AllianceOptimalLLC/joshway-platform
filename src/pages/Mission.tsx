@@ -1,81 +1,72 @@
 import { missionPrograms, missionStudents } from "@/data/mock";
 import { Calendar, GraduationCap, Users } from "lucide-react";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { StatCard } from "@/components/ui/StatCard";
 
 export default function Mission() {
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Mission Control</h1>
-        <p className="text-gray-400 text-sm">Bridge program operations</p>
+    <div className="module-accent-mission space-y-8">
+      <PageHeader
+        eyebrow="Mission Control"
+        title="Program Operations"
+        subtitle="Bridge journey, scheduling, and student outcomes"
+      />
+
+      <div className="grid sm:grid-cols-3 gap-3">
+        <StatCard label="Active students" value="48" icon={Users} accent="amber" />
+        <StatCard label="Programs" value="2" icon={Calendar} accent="cyan" />
+        <StatCard label="Completion" value="73%" icon={GraduationCap} accent="purple" />
       </div>
 
-      <div className="grid sm:grid-cols-3 gap-4">
-        {[
-          { icon: Users, label: "Active Students", value: "48" },
-          { icon: Calendar, label: "Programs", value: "2" },
-          { icon: GraduationCap, label: "Completion Rate", value: "73%" },
-        ].map((s) => (
-          <div key={s.label} className="glass rounded-xl p-4 flex items-center gap-4">
-            <s.icon className="w-8 h-8 text-joshway-purple shrink-0" />
-            <div>
-              <div className="text-2xl font-bold">{s.value}</div>
-              <div className="text-xs text-gray-400">{s.label}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <section>
-        <h2 className="font-semibold mb-3">Student Progress</h2>
-        <div className="glass rounded-xl overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-white/10 text-left text-gray-400">
-                <th className="px-4 py-3">Student</th>
-                <th className="px-4 py-3 hidden sm:table-cell">School</th>
-                <th className="px-4 py-3">Pillar</th>
-                <th className="px-4 py-3">Progress</th>
-              </tr>
-            </thead>
-            <tbody>
-              {missionStudents.map((s) => (
-                <tr key={s.name} className="border-b border-white/5">
-                  <td className="px-4 py-3 font-medium">{s.name}</td>
-                  <td className="px-4 py-3 text-gray-400 hidden sm:table-cell">{s.school}</td>
-                  <td className="px-4 py-3 text-gray-300">{s.pillar}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-20 h-1.5 bg-white/10 rounded-full overflow-hidden">
-                        <div className="h-full bg-joshway-purple rounded-full" style={{ width: `${s.progress}%` }} />
-                      </div>
-                      <span className="text-xs text-gray-400">{s.progress}%</span>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <div className="table-shell">
+        <div className="px-4 py-3 border-b border-white/[0.06]">
+          <h2 className="font-bold text-white">Student Progress</h2>
         </div>
-      </section>
+        <table className="w-full">
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th className="hidden sm:table-cell">School</th>
+              <th>Pillar</th>
+              <th className="text-right">Progress</th>
+            </tr>
+          </thead>
+          <tbody>
+            {missionStudents.map((s) => (
+              <tr key={s.name}>
+                <td className="font-semibold text-white">{s.name}</td>
+                <td className="hidden sm:table-cell text-gray-400">{s.school}</td>
+                <td className="text-gray-300">{s.pillar}</td>
+                <td className="text-right">
+                  <div className="flex items-center justify-end gap-2">
+                    <div className="w-16 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                      <div className="h-full bg-gradient-to-r from-amber-400 to-joshway-purple rounded-full" style={{ width: `${s.progress}%` }} />
+                    </div>
+                    <span className="text-xs text-gray-500 w-8">{s.progress}%</span>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       <section>
-        <h2 className="font-semibold mb-3">Bridge Programs</h2>
-        <div className="grid sm:grid-cols-2 gap-3">
+        <h2 className="font-bold text-lg mb-4">Bridge Programs</h2>
+        <div className="grid sm:grid-cols-2 gap-4">
           {missionPrograms.map((p) => (
-            <div key={p.name} className="glass rounded-xl p-4">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="font-medium">{p.name}</h3>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300">{p.status}</span>
+            <div key={p.name} className="surface-card-hover p-5">
+              <div className="flex justify-between items-start mb-3">
+                <h3 className="font-bold text-white">{p.name}</h3>
+                <span className="badge-pill bg-emerald-500/15 text-emerald-300 border border-emerald-500/20">{p.status}</span>
               </div>
-              <p className="text-sm text-gray-400">{p.site} · {p.sessions} sessions · {p.captains} site captains</p>
+              <p className="text-sm text-gray-400">
+                {p.site} · <span className="text-gray-300">{p.sessions} sessions</span> · {p.captains} site captains
+              </p>
             </div>
           ))}
         </div>
       </section>
-
-      <p className="text-xs text-gray-500 border-l-2 border-joshway-purple pl-3">
-        Production rebuild: Supabase Auth for students/educators/admins, auth.uid() RLS, signed admin JWTs — no email-only login or localStorage sessions.
-      </p>
     </div>
   );
 }

@@ -4,257 +4,320 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>JOSHWAY Lovable Codebase — Security Review</title>
+  <!-- Screen polish only; Gmail paste uses inline styles on elements below -->
   <style>
-    :root {
-      --cyan: #42c6ee;
-      --purple: #7687f3;
-      --bg: #0f1117;
-      --surface: #1a1d27;
-      --surface2: #242836;
-      --text: #f4f5f7;
-      --muted: #9aa3b2;
-      --bug: #ff6b6b;
-      --suggestion: #ffb347;
-      --nit: #7dd3fc;
-      --border: #2e3448;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-      padding: 2rem 1.5rem 4rem;
-    }
-    .container { max-width: 1100px; margin: 0 auto; }
-    header {
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 2rem;
-      margin-bottom: 2rem;
-    }
-    .badge {
-      display: inline-block;
-      background: linear-gradient(135deg, var(--cyan), var(--purple));
-      color: #000;
-      font-size: 0.7rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      padding: 0.25rem 0.6rem;
-      border-radius: 4px;
-      margin-bottom: 1rem;
-    }
-    h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }
-    .meta { color: var(--muted); font-size: 0.9rem; }
-    .summary {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.5rem;
-      margin-bottom: 2rem;
-    }
-    .summary p { color: #d1d5db; }
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 1rem;
-      margin: 2rem 0;
-    }
-    .stat {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 1.25rem;
-      text-align: center;
-    }
-    .stat .num { font-size: 2rem; font-weight: 800; }
-    .stat .label { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
-    .stat.bug .num { color: var(--bug); }
-    .stat.suggestion .num { color: var(--suggestion); }
-    .stat.nit .num { color: var(--nit); }
-    .apps {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }
-    .app-card {
-      background: var(--surface2);
-      border-radius: 10px;
-      padding: 1rem;
-      border-left: 4px solid var(--cyan);
-    }
-    .app-card h3 { font-size: 0.95rem; margin-bottom: 0.25rem; }
-    .app-card code { font-size: 0.7rem; color: var(--muted); word-break: break-all; }
-    h2 {
-      font-size: 1.25rem;
-      margin: 2.5rem 0 1rem;
-      padding-bottom: 0.5rem;
-      border-bottom: 1px solid var(--border);
-    }
-    .filters { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
-    .filter-btn {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 0.4rem 0.9rem;
-      border-radius: 999px;
-      cursor: pointer;
-      font-size: 0.85rem;
-    }
-    .filter-btn.active, .filter-btn:hover { border-color: var(--cyan); background: rgba(66,198,238,0.12); }
-    .issue {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 1.25rem;
-      margin-bottom: 0.75rem;
-      border-left: 4px solid var(--border);
-    }
-    .issue[data-severity="bug"] { border-left-color: var(--bug); }
-    .issue[data-severity="suggestion"] { border-left-color: var(--suggestion); }
-    .issue[data-severity="nit"] { border-left-color: var(--nit); }
-    .issue-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
-    .issue-num { font-weight: 700; color: var(--muted); font-size: 0.85rem; }
-    .severity {
-      font-size: 0.7rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      padding: 0.15rem 0.5rem;
-      border-radius: 4px;
-    }
-    .severity.bug { background: rgba(255,107,107,0.2); color: var(--bug); }
-    .severity.suggestion { background: rgba(255,179,71,0.2); color: var(--suggestion); }
-    .severity.nit { background: rgba(125,211,252,0.2); color: var(--nit); }
-    .file { font-family: ui-monospace, monospace; font-size: 0.8rem; color: var(--cyan); word-break: break-all; }
-    .desc, .suggestion-text { font-size: 0.92rem; color: #d1d5db; margin-top: 0.5rem; }
-    .suggestion-text strong { color: var(--purple); }
-    .rec-box {
-      background: linear-gradient(135deg, rgba(66,198,238,0.08), rgba(118,135,243,0.08));
-      border: 1px solid rgba(66,198,238,0.3);
-      border-radius: 12px;
-      padding: 1.5rem;
-      margin-top: 2rem;
-    }
-    .rec-box h3 { margin-bottom: 0.75rem; }
-    .rec-box ul { margin-left: 1.25rem; color: #d1d5db; }
-    .rec-box li { margin-bottom: 0.4rem; }
-    footer { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.8rem; }
-    @media print {
-      body { background: #fff; color: #111; }
-      .issue, .summary, .stat, .app-card { border: 1px solid #ccc; background: #f9f9f9; }
+    @media screen {
+      body { max-width: 1100px; margin: 0 auto; }
+      .copy-hint { background: #e8f7fc; border: 1px solid #42c6ee; padding: 12px 16px; margin-bottom: 24px; font-size: 14px; }
     }
   </style>
 </head>
-<body>
-  <div class="container">
-    <header>
-      <div class="badge">Confidential — Internal Review</div>
-      <h1>JOSHWAY Lovable Codebase Security Review</h1>
-      <p class="meta">Generated July 1, 2026 · Read-only archive analysis · 4 apps · 25 findings</p>
-    </header>
+<body style="margin:0;padding:24px 20px 48px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.5;color:#111111;background-color:#ffffff;">
 
-    <div class="summary">
-      <p>The JOSHWAY Lovable monorepo contains four independent Vite/React apps, each bound to its own Supabase project, with no shared auth layer. Academy, Connect Hub, and Base Camp use Supabase Auth with role-based RLS (relatively sound). Mission Control uses three parallel auth models backed by broadly permissive RLS on core tables. Cross-app integration is limited to Connect Hub's broken Academy invite card. Unification requires a federated multi-client layer, single identity model, and phased RLS hardening.</p>
-    </div>
+  <p class="copy-hint" style="background-color:#e8f7fc;border:1px solid #42c6ee;padding:12px 16px;margin:0 0 24px;font-size:14px;color:#111111;">
+    <strong>Copy to Gmail:</strong> Click inside this page → <strong>Cmd+A</strong> (select all) → <strong>Cmd+C</strong> → paste into Gmail compose. Tables use real columns so alignment is preserved.
+  </p>
 
-    <div class="stats">
-      <div class="stat bug"><div class="num">11</div><div class="label">Bugs</div></div>
-      <div class="stat suggestion"><div class="num">12</div><div class="label">Suggestions</div></div>
-      <div class="stat nit"><div class="num">2</div><div class="label">Nits</div></div>
-      <div class="stat"><div class="num">4</div><div class="label">Supabase DBs</div></div>
-    </div>
+  <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;margin-bottom:16px;">
+    <tr>
+      <td style="padding:4px 8px;background-color:#42c6ee;color:#000000;font-size:11px;font-weight:bold;letter-spacing:0.08em;text-transform:uppercase;">Confidential — Internal Review</td>
+    </tr>
+  </table>
 
-    <h2>Systems Reviewed</h2>
-    <div class="apps">
-      <div class="app-card"><h3>JOSHWAY Academy</h3><code>antkbpprjyrhqhbfwjue</code><p style="font-size:0.8rem;color:var(--muted);margin-top:0.5rem">Learners, courses, badges</p></div>
-      <div class="app-card"><h3>Connect Hub</h3><code>eybpnlmlyzomrrzqzirz</code><p style="font-size:0.8rem;color:var(--muted);margin-top:0.5rem">Agent CRM, DonorDock</p></div>
-      <div class="app-card"><h3>Base Camp</h3><code>rfsbzejgkbrdqzbjhxuu</code><p style="font-size:0.8rem;color:var(--muted);margin-top:0.5rem">Staff hub, help desk</p></div>
-      <div class="app-card" style="border-left-color:var(--bug)"><h3>Mission Control</h3><code>uthunexsjpurvuriipnz</code><p style="font-size:0.8rem;color:var(--muted);margin-top:0.5rem">Highest risk — custom auth + open RLS</p></div>
-    </div>
+  <h1 style="margin:0 0 8px;font-size:24px;font-weight:bold;color:#111111;">JOSHWAY Lovable Codebase Security Review</h1>
+  <p style="margin:0 0 24px;font-size:13px;color:#555555;">Generated July 1, 2026 · Read-only archive analysis · 4 apps · 25 findings</p>
 
-    <h2>Findings</h2>
-    <div class="filters">
-      <button class="filter-btn active" data-filter="all">All (25)</button>
-      <button class="filter-btn" data-filter="bug">Bugs (11)</button>
-      <button class="filter-btn" data-filter="suggestion">Suggestions (12)</button>
-      <button class="filter-btn" data-filter="nit">Nits (2)</button>
-    </div>
-    <div id="issues"></div>
+  <table role="presentation" border="1" cellpadding="12" cellspacing="0" style="width:100%;border-collapse:collapse;border:1px solid #cccccc;margin-bottom:24px;">
+    <tr>
+      <td style="border:1px solid #cccccc;background-color:#f7f7f7;color:#333333;font-size:14px;">
+        The JOSHWAY Lovable monorepo contains four independent Vite/React apps, each bound to its own Supabase project, with no shared auth layer. Academy, Connect Hub, and Base Camp use Supabase Auth with role-based RLS (relatively sound). Mission Control uses three parallel auth models backed by broadly permissive RLS on core tables. Cross-app integration is limited to Connect Hub's broken Academy invite card.
+      </td>
+    </tr>
+  </table>
 
-    <div class="rec-box">
-      <h3>Recommendations for Unified Platform</h3>
-      <ul>
-        <li><strong>Do not port Mission Control auth as-is.</strong> Rebuild with Supabase Auth + signed server tokens.</li>
-        <li><strong>Never embed cross-project Supabase keys in frontend.</strong> Use a federation gateway edge function.</li>
-        <li><strong>Execute Mission Control security Phase 1</strong> before connecting live data.</li>
-        <li><strong>Federated v1 is safe:</strong> new shell reads/writes existing DBs while old apps keep running.</li>
-        <li><strong>Showcase build</strong> uses mock data and demonstrates secure patterns without live credentials.</li>
-      </ul>
-    </div>
+  <h2 style="margin:24px 0 12px;font-size:16px;font-weight:bold;color:#111111;border-bottom:2px solid #42c6ee;padding-bottom:6px;">Summary counts</h2>
+  <table border="1" cellpadding="10" cellspacing="0" style="width:100%;max-width:480px;border-collapse:collapse;border:1px solid #cccccc;margin-bottom:24px;">
+    <thead>
+      <tr style="background-color:#f0f0f0;">
+        <th style="border:1px solid #cccccc;padding:10px;text-align:left;font-weight:bold;width:60%;">Metric</th>
+        <th style="border:1px solid #cccccc;padding:10px;text-align:center;font-weight:bold;width:40%;">Count</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="border:1px solid #cccccc;padding:10px;">Bugs</td>
+        <td style="border:1px solid #cccccc;padding:10px;text-align:center;font-weight:bold;color:#cc0000;">11</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #cccccc;padding:10px;">Suggestions</td>
+        <td style="border:1px solid #cccccc;padding:10px;text-align:center;font-weight:bold;color:#b45309;">12</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #cccccc;padding:10px;">Nits</td>
+        <td style="border:1px solid #cccccc;padding:10px;text-align:center;font-weight:bold;color:#0369a1;">2</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #cccccc;padding:10px;">Separate Supabase databases</td>
+        <td style="border:1px solid #cccccc;padding:10px;text-align:center;font-weight:bold;">4</td>
+      </tr>
+    </tbody>
+  </table>
 
-    <footer>
-      Source: read-only analysis of /Personal-Claude/!Joshway-Workspace/!Joshway-CRM-Lovable · Review ID: a8f3c2d1 · This report does not modify production systems.
-    </footer>
-  </div>
+  <h2 style="margin:24px 0 12px;font-size:16px;font-weight:bold;color:#111111;border-bottom:2px solid #42c6ee;padding-bottom:6px;">Systems reviewed</h2>
+  <table border="1" cellpadding="10" cellspacing="0" style="width:100%;border-collapse:collapse;border:1px solid #cccccc;margin-bottom:24px;">
+    <thead>
+      <tr style="background-color:#f0f0f0;">
+        <th style="border:1px solid #cccccc;padding:10px;text-align:left;font-weight:bold;width:22%;">System</th>
+        <th style="border:1px solid #cccccc;padding:10px;text-align:left;font-weight:bold;width:28%;">Supabase project</th>
+        <th style="border:1px solid #cccccc;padding:10px;text-align:left;font-weight:bold;width:30%;">Purpose</th>
+        <th style="border:1px solid #cccccc;padding:10px;text-align:left;font-weight:bold;width:20%;">Risk level</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="border:1px solid #cccccc;padding:10px;font-weight:bold;">JOSHWAY Academy</td>
+        <td style="border:1px solid #cccccc;padding:10px;font-family:Consolas,monospace;font-size:12px;">antkbpprjyrhqhbfwjue</td>
+        <td style="border:1px solid #cccccc;padding:10px;">Learners, courses, badges</td>
+        <td style="border:1px solid #cccccc;padding:10px;color:#b45309;">Medium</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #cccccc;padding:10px;font-weight:bold;">Connect Hub</td>
+        <td style="border:1px solid #cccccc;padding:10px;font-family:Consolas,monospace;font-size:12px;">eybpnlmlyzomrrzqzirz</td>
+        <td style="border:1px solid #cccccc;padding:10px;">Agent CRM, DonorDock</td>
+        <td style="border:1px solid #cccccc;padding:10px;color:#b45309;">Medium</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #cccccc;padding:10px;font-weight:bold;">Base Camp</td>
+        <td style="border:1px solid #cccccc;padding:10px;font-family:Consolas,monospace;font-size:12px;">rfsbzejgkbrdqzbjhxuu</td>
+        <td style="border:1px solid #cccccc;padding:10px;">Staff hub, help desk</td>
+        <td style="border:1px solid #cccccc;padding:10px;color:#15803d;">Lower</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #cccccc;padding:10px;font-weight:bold;">Mission Control</td>
+        <td style="border:1px solid #cccccc;padding:10px;font-family:Consolas,monospace;font-size:12px;">uthunexsjpurvuriipnz</td>
+        <td style="border:1px solid #cccccc;padding:10px;">Bridge ops, students, finance</td>
+        <td style="border:1px solid #cccccc;padding:10px;color:#cc0000;font-weight:bold;">High</td>
+      </tr>
+    </tbody>
+  </table>
 
-  <script>
-    const issues = [
-      { n:1, sev:"bug", file:"Mission Control/src/contexts/JourneyContext.tsx:176-226", desc:"Student login is email-only with no verification. user_progress has USING(true) RLS — any anon client can impersonate or mutate any student.", sug:"Migrate to Supabase Auth; scope RLS to auth.uid(); route reads through edge functions until then." },
-      { n:2, sev:"bug", file:"Mission Control/src/contexts/EducatorContext.tsx:203-257", desc:"Educator login is email + first name only with localStorage session. Auto-inserts approved educators enabling email squatting.", sug:"Require Supabase Auth; tie educator_profiles.user_id to auth.uid()." },
-      { n:3, sev:"bug", file:"Mission Control/src/contexts/AdminContext.tsx:143-165", desc:"Admin sessions are unsigned JSON in localStorage. validate-only verify-admin only checks UUID exists.", sug:"Issue short-lived signed JWT/HMAC tokens; validate on every admin edge function call." },
-      { n:4, sev:"bug", file:"Mission Control/supabase/functions/qbo-create-bill/index.ts:36-51", desc:"QBO/financial ops trust admin_id in JSON body with no cryptographic proof. Repeated across ~12 QBO functions.", sug:"Require signed Authorization header; audit-log verified admin identity." },
-      { n:5, sev:"bug", file:"Mission Control/supabase/migrations/20260222013038_*.sql:1-5", desc:"admin_users SELECT policy USING(true) exposes password_hash, reset_token, invite_token to anon key.", sug:"Revoke sensitive column SELECT from anon/authenticated; service-role edge functions only." },
-      { n:6, sev:"bug", file:"Mission Control/supabase/migrations/20260125152602_*.sql:8-13", desc:"Bridge tables have FOR ALL USING(true) WITH CHECK(true) — world-readable/writable operational data.", sug:"Deny direct access; token-scoped reads via edge functions with service role." },
-      { n:7, sev:"bug", file:"Mission Control/supabase/migrations/20260123154612_*.sql:50-68", desc:"inbox_messages allows SELECT/INSERT/UPDATE with USING(true) — messaging content fully public.", sug:"Scope to thread participants via auth.uid() or validated tokens." },
-      { n:8, sev:"bug", file:"Mission Control/supabase/migrations/20260302014056_*.sql:34-39", desc:"student_circle_tickets SELECT policy ends with OR true — all support tickets readable by anyone.", sug:"Remove OR true; restrict to ticket owner and verified admins." },
-      { n:9, sev:"bug", file:"Connect Hub/src/components/academy/AcademyStatusCard.tsx:21-136", desc:"Hardcodes Academy keys in frontend. Status fetch fails on admin-only RLS. Invite sends 401/403 with anon key.", sug:"Build federation edge function; never embed cross-project keys in browser." },
-      { n:10, sev:"bug", file:"Connect Hub/src/App.tsx:107-113", desc:"Admin routes lack requireAdmin=true. Non-admin agents can navigate to admin UI.", sug:"Wrap /admin/* in AdminRoute with requireAdmin." },
-      { n:11, sev:"bug", file:"Academy/supabase/functions/email-login/index.ts:38-58", desc:"Returns {found:false} enabling enumeration. No rate limiting on magic link generation.", sug:"Constant response shape; per-IP/email rate limits; send links via email only." },
-      { n:12, sev:"suggestion", file:"All apps/.env:1-3", desc:"Live Supabase URLs/keys committed in .env without .gitignore entry.", sug:"Add .env to .gitignore; commit .env.example placeholders only." },
-      { n:13, sev:"suggestion", file:"Mission Control/.lovable/plan.md:1-104", desc:"~60 security findings documented across 3 phases; Phase 1 safe wins not evidenced as shipped.", sug:"Execute Phase 1 before federation; treat Phase 3 as blockers for Mission Control exposure." },
-      { n:14, sev:"suggestion", file:"Architecture", desc:"Four incompatible auth models — Academy profiles.id=auth.uid(), Connect/Base Camp profiles.user_id FK, Mission Control custom admin_users + email-only students.", sug:"FederatedAuth adapters; long-term converge on single Supabase Auth + user_roles." },
-      { n:15, sev:"suggestion", file:"Architecture", desc:"Schema divergence — different profiles shapes, role enums, separate types.ts per app.", sug:"packages/db-types workspace; do not merge schema until identity unified." },
-      { n:16, sev:"suggestion", file:"Architecture", desc:"112+ edge functions with duplicated cors (*), password helpers, MCP servers with static bearer tokens.", sug:"Shared _shared module; one MCP gateway; CORS allowlist to joshway.org domains." },
-      { n:17, sev:"suggestion", file:"Mission Control/supabase/functions/verify-admin/index.ts:62-77", desc:"In-memory rate limit Map resets per Deno isolate — minimal credential stuffing protection.", sug:"Redis/Upstash or login_attempts Postgres table." },
-      { n:18, sev:"suggestion", file:"Connect Hub/supabase/functions/admin-get-secret/index.ts:8-54", desc:"Returns raw DONORDOCK_SYNC_SECRET to browser for admins.", sug:"Keep secrets server-side; return masked connection status only." },
-      { n:19, sev:"suggestion", file:"Mission Control/src/hooks/useAdminImpersonation.ts:37-43", desc:"Impersonation stored in localStorage only — no server audit trail.", sug:"Server-signed impersonation tokens with audit logging." },
-      { n:20, sev:"suggestion", file:"Testing", desc:"Thin test coverage outside Academy. No RLS policy tests, no edge function tests.", sug:"pgTAP RLS tests for Mission Control; contract tests for federation layer." },
-      { n:21, sev:"suggestion", file:"Academy/src/integrations/supabase/client.ts:11-17", desc:"Four localStorage auth tokens on one origin may race on refresh; logout won't clear all.", sug:"Namespace storage keys; global session coordinator; httpOnly cookies for admin shell." },
-      { n:22, sev:"nit", file:"Connect Hub/src/hooks/useAuth.tsx:39,72", desc:"console.log of user emails in production auth paths.", sug:"Remove or gate behind import.meta.env.DEV." },
-      { n:23, sev:"nit", file:"Base Camp/src/hooks/useAuth.tsx:50-62", desc:"Client-side ensureProfile() duplicates DB trigger — race-prone.", sug:"Rely solely on handle_new_user trigger." },
-      { n:24, sev:"nit", file:"Academy vs Mission Control App.tsx", desc:"Duplicated React Query boilerplate with inconsistent ErrorBoundary placement.", sug:"Extract shared AppShell component." },
-      { n:25, sev:"suggestion", file:"Mission Control/supabase/migrations/20260123210025_*.sql:1-4", desc:"Realtime enabled on user_progress while RLS is USING(true) — live PII broadcast to anon subscribers.", sug:"Disable public realtime until auth.uid()-scoped policies exist." }
-    ];
+  <h2 style="margin:24px 0 12px;font-size:16px;font-weight:bold;color:#111111;border-bottom:2px solid #7687f3;padding-bottom:6px;">Findings (25)</h2>
+  <table border="1" cellpadding="8" cellspacing="0" style="width:100%;border-collapse:collapse;border:1px solid #cccccc;margin-bottom:24px;table-layout:fixed;">
+    <colgroup>
+      <col style="width:4%;" />
+      <col style="width:9%;" />
+      <col style="width:22%;" />
+      <col style="width:32%;" />
+      <col style="width:33%;" />
+    </colgroup>
+    <thead>
+      <tr style="background-color:#f0f0f0;">
+        <th style="border:1px solid #cccccc;padding:8px;text-align:center;font-weight:bold;font-size:12px;">#</th>
+        <th style="border:1px solid #cccccc;padding:8px;text-align:left;font-weight:bold;font-size:12px;">Severity</th>
+        <th style="border:1px solid #cccccc;padding:8px;text-align:left;font-weight:bold;font-size:12px;">File</th>
+        <th style="border:1px solid #cccccc;padding:8px;text-align:left;font-weight:bold;font-size:12px;">Issue</th>
+        <th style="border:1px solid #cccccc;padding:8px;text-align:left;font-weight:bold;font-size:12px;">Recommended fix</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="border:1px solid #cccccc;padding:8px;text-align:center;vertical-align:top;">1</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;background-color:#ffeeee;color:#cc0000;font-weight:bold;font-size:12px;">bug</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-family:Consolas,monospace;font-size:11px;word-wrap:break-word;">Mission Control/src/contexts/JourneyContext.tsx:176-226</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Student login is email-only with no verification. user_progress has USING(true) RLS — any anon client can impersonate or mutate any student.</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Migrate to Supabase Auth; scope RLS to auth.uid(); route reads through edge functions until then.</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #cccccc;padding:8px;text-align:center;vertical-align:top;">2</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;background-color:#ffeeee;color:#cc0000;font-weight:bold;font-size:12px;">bug</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-family:Consolas,monospace;font-size:11px;">Mission Control/src/contexts/EducatorContext.tsx:203-257</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Educator login is email + first name only with localStorage session. Auto-inserts approved educators enabling email squatting.</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Require Supabase Auth; tie educator_profiles.user_id to auth.uid().</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #cccccc;padding:8px;text-align:center;vertical-align:top;">3</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;background-color:#ffeeee;color:#cc0000;font-weight:bold;font-size:12px;">bug</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-family:Consolas,monospace;font-size:11px;">Mission Control/src/contexts/AdminContext.tsx:143-165</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Admin sessions are unsigned JSON in localStorage. validate-only verify-admin only checks UUID exists.</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Issue short-lived signed JWT/HMAC tokens; validate on every admin edge function call.</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #cccccc;padding:8px;text-align:center;vertical-align:top;">4</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;background-color:#ffeeee;color:#cc0000;font-weight:bold;font-size:12px;">bug</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-family:Consolas,monospace;font-size:11px;">Mission Control/supabase/functions/qbo-create-bill/index.ts:36-51</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">QBO/financial ops trust admin_id in JSON body with no cryptographic proof (~12 QBO functions).</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Require signed Authorization header; audit-log verified admin identity.</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #cccccc;padding:8px;text-align:center;vertical-align:top;">5</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;background-color:#ffeeee;color:#cc0000;font-weight:bold;font-size:12px;">bug</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-family:Consolas,monospace;font-size:11px;">Mission Control/.../20260222013038_*.sql:1-5</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">admin_users SELECT policy USING(true) exposes password_hash, reset_token, invite_token to anon key.</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Revoke sensitive column SELECT from anon/authenticated; service-role edge functions only.</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #cccccc;padding:8px;text-align:center;vertical-align:top;">6</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;background-color:#ffeeee;color:#cc0000;font-weight:bold;font-size:12px;">bug</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-family:Consolas,monospace;font-size:11px;">Mission Control/.../20260125152602_*.sql:8-13</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Bridge tables have FOR ALL USING(true) — world-readable/writable operational data.</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Deny direct access; token-scoped reads via edge functions with service role.</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #cccccc;padding:8px;text-align:center;vertical-align:top;">7</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;background-color:#ffeeee;color:#cc0000;font-weight:bold;font-size:12px;">bug</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-family:Consolas,monospace;font-size:11px;">Mission Control/.../20260123154612_*.sql:50-68</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">inbox_messages allows SELECT/INSERT/UPDATE with USING(true) — messaging fully public.</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Scope to thread participants via auth.uid() or validated tokens.</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #cccccc;padding:8px;text-align:center;vertical-align:top;">8</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;background-color:#ffeeee;color:#cc0000;font-weight:bold;font-size:12px;">bug</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-family:Consolas,monospace;font-size:11px;">Mission Control/.../20260302014056_*.sql:34-39</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">student_circle_tickets SELECT policy ends with OR true — all support tickets readable.</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Remove OR true; restrict to ticket owner and verified admins.</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #cccccc;padding:8px;text-align:center;vertical-align:top;">9</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;background-color:#ffeeee;color:#cc0000;font-weight:bold;font-size:12px;">bug</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-family:Consolas,monospace;font-size:11px;">Connect Hub/.../AcademyStatusCard.tsx:21-136</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Hardcodes Academy keys in frontend; invite sends 401/403 with anon key.</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Federation edge function; never embed cross-project keys in browser.</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #cccccc;padding:8px;text-align:center;vertical-align:top;">10</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;background-color:#ffeeee;color:#cc0000;font-weight:bold;font-size:12px;">bug</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-family:Consolas,monospace;font-size:11px;">Connect Hub/src/App.tsx:107-113</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Admin routes lack requireAdmin=true. Non-admin agents can open admin UI.</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Wrap /admin/* in AdminRoute with requireAdmin.</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #cccccc;padding:8px;text-align:center;vertical-align:top;">11</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;background-color:#ffeeee;color:#cc0000;font-weight:bold;font-size:12px;">bug</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-family:Consolas,monospace;font-size:11px;">Academy/supabase/functions/email-login/index.ts:38-58</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Returns {found:false} enabling enumeration; no rate limiting on magic links.</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Constant response shape; per-IP/email rate limits; send links via email only.</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #cccccc;padding:8px;text-align:center;vertical-align:top;">12</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;background-color:#fff8e6;color:#b45309;font-weight:bold;font-size:12px;">suggestion</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-family:Consolas,monospace;font-size:11px;">All apps/.env:1-3</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Live Supabase URLs/keys committed without .gitignore entry.</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Add .env to .gitignore; commit .env.example placeholders only.</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #cccccc;padding:8px;text-align:center;vertical-align:top;">13</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;background-color:#fff8e6;color:#b45309;font-weight:bold;font-size:12px;">suggestion</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-family:Consolas,monospace;font-size:11px;">Mission Control/.lovable/plan.md</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">~60 security findings documented; Phase 1 safe wins not evidenced as shipped.</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Execute Phase 1 before federation; Phase 3 blockers for Mission Control.</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #cccccc;padding:8px;text-align:center;vertical-align:top;">14</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;background-color:#fff8e6;color:#b45309;font-weight:bold;font-size:12px;">suggestion</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-family:Consolas,monospace;font-size:11px;">Architecture</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Four incompatible auth models across apps; unified shell cannot share one AuthProvider.</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">FederatedAuth adapters; converge on Supabase Auth + user_roles.</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #cccccc;padding:8px;text-align:center;vertical-align:top;">15</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;background-color:#fff8e6;color:#b45309;font-weight:bold;font-size:12px;">suggestion</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-family:Consolas,monospace;font-size:11px;">Architecture</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Schema divergence — different profiles shapes, role enums, separate types.ts per app.</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">packages/db-types workspace; do not merge schema until identity unified.</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #cccccc;padding:8px;text-align:center;vertical-align:top;">16</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;background-color:#fff8e6;color:#b45309;font-weight:bold;font-size:12px;">suggestion</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-family:Consolas,monospace;font-size:11px;">Architecture</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">112+ edge functions duplicated; CORS *; MCP servers with static bearer tokens.</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Shared _shared module; one MCP gateway; CORS allowlist joshway.org.</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #cccccc;padding:8px;text-align:center;vertical-align:top;">17</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;background-color:#fff8e6;color:#b45309;font-weight:bold;font-size:12px;">suggestion</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-family:Consolas,monospace;font-size:11px;">Mission Control/.../verify-admin/index.ts:62-77</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">In-memory rate limit Map resets per Deno isolate.</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Redis/Upstash or login_attempts Postgres table.</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #cccccc;padding:8px;text-align:center;vertical-align:top;">18</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;background-color:#fff8e6;color:#b45309;font-weight:bold;font-size:12px;">suggestion</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-family:Consolas,monospace;font-size:11px;">Connect Hub/.../admin-get-secret/index.ts:8-54</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Returns raw DONORDOCK_SYNC_SECRET to browser for admins.</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Keep secrets server-side; return masked connection status only.</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #cccccc;padding:8px;text-align:center;vertical-align:top;">19</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;background-color:#fff8e6;color:#b45309;font-weight:bold;font-size:12px;">suggestion</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-family:Consolas,monospace;font-size:11px;">Mission Control/.../useAdminImpersonation.ts:37-43</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Impersonation stored in localStorage only — no server audit trail.</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Server-signed impersonation tokens with audit logging.</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #cccccc;padding:8px;text-align:center;vertical-align:top;">20</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;background-color:#fff8e6;color:#b45309;font-weight:bold;font-size:12px;">suggestion</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-family:Consolas,monospace;font-size:11px;">Testing</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Thin test coverage outside Academy; no RLS or edge function tests.</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">pgTAP RLS tests for Mission Control; contract tests for federation.</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #cccccc;padding:8px;text-align:center;vertical-align:top;">21</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;background-color:#fff8e6;color:#b45309;font-weight:bold;font-size:12px;">suggestion</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-family:Consolas,monospace;font-size:11px;">Academy/.../supabase/client.ts:11-17</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Four localStorage auth tokens on one origin may race; logout won't clear all.</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Namespace storage keys; global session coordinator; httpOnly cookies for admin.</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #cccccc;padding:8px;text-align:center;vertical-align:top;">22</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;background-color:#e8f4fc;color:#0369a1;font-weight:bold;font-size:12px;">nit</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-family:Consolas,monospace;font-size:11px;">Connect Hub/.../useAuth.tsx:39,72</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">console.log of user emails in production auth paths.</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Remove or gate behind import.meta.env.DEV.</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #cccccc;padding:8px;text-align:center;vertical-align:top;">23</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;background-color:#e8f4fc;color:#0369a1;font-weight:bold;font-size:12px;">nit</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-family:Consolas,monospace;font-size:11px;">Base Camp/.../useAuth.tsx:50-62</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Client ensureProfile() duplicates DB trigger — race-prone.</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Rely solely on handle_new_user trigger.</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #cccccc;padding:8px;text-align:center;vertical-align:top;">24</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;background-color:#e8f4fc;color:#0369a1;font-weight:bold;font-size:12px;">nit</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-family:Consolas,monospace;font-size:11px;">Academy vs Mission Control App.tsx</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Duplicated React Query boilerplate; inconsistent ErrorBoundary placement.</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Extract shared AppShell component.</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #cccccc;padding:8px;text-align:center;vertical-align:top;">25</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;background-color:#fff8e6;color:#b45309;font-weight:bold;font-size:12px;">suggestion</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-family:Consolas,monospace;font-size:11px;">Mission Control/.../20260123210025_*.sql:1-4</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Realtime on user_progress while RLS is USING(true) — live PII broadcast.</td>
+        <td style="border:1px solid #cccccc;padding:8px;vertical-align:top;font-size:13px;">Disable public realtime until auth.uid()-scoped policies exist.</td>
+      </tr>
+    </tbody>
+  </table>
 
-    const container = document.getElementById('issues');
-    issues.forEach(i => {
-      const el = document.createElement('div');
-      el.className = 'issue';
-      el.dataset.severity = i.sev;
-      el.innerHTML = `
-        <div class="issue-header">
-          <span class="issue-num">#${i.n}</span>
-          <span class="severity ${i.sev}">${i.sev}</span>
-          <span class="file">${i.file}</span>
-        </div>
-        <div class="desc">${i.desc}</div>
-        <div class="suggestion-text"><strong>Fix:</strong> ${i.sug}</div>
-      `;
-      container.appendChild(el);
-    });
+  <h2 style="margin:24px 0 12px;font-size:16px;font-weight:bold;color:#111111;border-bottom:2px solid #42c6ee;padding-bottom:6px;">Recommendations for unified platform</h2>
+  <table border="1" cellpadding="10" cellspacing="0" style="width:100%;border-collapse:collapse;border:1px solid #cccccc;margin-bottom:24px;">
+    <thead>
+      <tr style="background-color:#f0f0f0;">
+        <th style="border:1px solid #cccccc;padding:10px;text-align:left;font-weight:bold;width:8%;">#</th>
+        <th style="border:1px solid #cccccc;padding:10px;text-align:left;font-weight:bold;width:92%;">Recommendation</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td style="border:1px solid #cccccc;padding:10px;text-align:center;">1</td><td style="border:1px solid #cccccc;padding:10px;">Do not port Mission Control auth as-is. Rebuild with Supabase Auth + signed server tokens.</td></tr>
+      <tr><td style="border:1px solid #cccccc;padding:10px;text-align:center;">2</td><td style="border:1px solid #cccccc;padding:10px;">Never embed cross-project Supabase keys in frontend. Use a federation gateway edge function.</td></tr>
+      <tr><td style="border:1px solid #cccccc;padding:10px;text-align:center;">3</td><td style="border:1px solid #cccccc;padding:10px;">Execute Mission Control security Phase 1 before connecting live data.</td></tr>
+      <tr><td style="border:1px solid #cccccc;padding:10px;text-align:center;">4</td><td style="border:1px solid #cccccc;padding:10px;">Federated v1 is safe: new shell reads/writes existing DBs while old apps keep running.</td></tr>
+      <tr><td style="border:1px solid #cccccc;padding:10px;text-align:center;">5</td><td style="border:1px solid #cccccc;padding:10px;">Showcase build uses mock data and demonstrates secure patterns without live credentials.</td></tr>
+    </tbody>
+  </table>
 
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const f = btn.dataset.filter;
-        document.querySelectorAll('.issue').forEach(el => {
-          el.style.display = (f === 'all' || el.dataset.severity === f) ? 'block' : 'none';
-        });
-      });
-    });
-  </script>
+  <p style="margin:32px 0 0;font-size:12px;color:#888888;border-top:1px solid #cccccc;padding-top:16px;">
+    Source: read-only analysis of JOSHWAY-CRM-Lovable archive · Review ID: a8f3c2d1 · Does not modify production systems.
+  </p>
+
 </body>
 </html>

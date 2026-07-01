@@ -1,79 +1,71 @@
 import { connectContacts } from "@/data/mock";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, TrendingUp } from "lucide-react";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { StatCard } from "@/components/ui/StatCard";
 
-const stageColors: Record<string, string> = {
-  New: "bg-blue-500/20 text-blue-300",
-  Contacted: "bg-amber-500/20 text-amber-300",
-  Qualified: "bg-purple-500/20 text-purple-300",
-  "Ready for DonorDock": "bg-emerald-500/20 text-emerald-300",
+const stageStyles: Record<string, string> = {
+  New: "bg-blue-500/15 text-blue-300 border-blue-500/20",
+  Contacted: "bg-amber-500/15 text-amber-300 border-amber-500/20",
+  Qualified: "bg-purple-500/15 text-purple-300 border-purple-500/20",
+  "Ready for DonorDock": "bg-emerald-500/15 text-emerald-300 border-emerald-500/20",
 };
 
 export default function Connect() {
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">JOSHWAY Connect</h1>
-          <p className="text-gray-400 text-sm">Donor relationship pipeline</p>
-        </div>
-        <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-joshway-cyan text-black text-sm font-medium">
-          <Plus className="w-4 h-4" /> New Contact
-        </button>
-      </div>
+    <div className="module-accent-connect space-y-8">
+      <PageHeader
+        eyebrow="JOSHWAY Connect"
+        title="Donor Pipeline"
+        subtitle="Relationship intelligence for your development team"
+        action={
+          <button className="btn-primary">
+            <Plus className="w-4 h-4" /> New Contact
+          </button>
+        }
+      />
 
-      <div className="flex gap-4 flex-wrap">
-        {[
-          { label: "Total Contacts", value: "127" },
-          { label: "Pipeline Value", value: "$340K" },
-          { label: "This Month", value: "+12" },
-        ].map((s) => (
-          <div key={s.label} className="glass rounded-xl px-5 py-4 min-w-[140px]">
-            <div className="text-2xl font-bold">{s.value}</div>
-            <div className="text-xs text-gray-400">{s.label}</div>
-          </div>
-        ))}
+      <div className="grid sm:grid-cols-3 gap-3">
+        <StatCard label="Total contacts" value="127" icon={TrendingUp} accent="purple" />
+        <StatCard label="Pipeline value" value="$340K" accent="cyan" />
+        <StatCard label="New this month" value="+12" trend="↑ 8% vs last month" accent="emerald" />
       </div>
 
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
         <input
-          placeholder="Search contacts..."
-          className="w-full pl-10 pr-4 py-2.5 rounded-lg glass text-sm focus:outline-none focus:ring-1 focus:ring-joshway-cyan"
+          placeholder="Search contacts, companies, tags..."
+          className="w-full pl-11 pr-4 py-3.5 rounded-2xl surface-card text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-joshway-purple/40 focus:border-joshway-purple/30"
         />
       </div>
 
-      <div className="glass rounded-xl overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="table-shell">
+        <table className="w-full">
           <thead>
-            <tr className="border-b border-white/10 text-left text-gray-400">
-              <th className="px-4 py-3 font-medium">Name</th>
-              <th className="px-4 py-3 font-medium hidden sm:table-cell">Company</th>
-              <th className="px-4 py-3 font-medium">Stage</th>
-              <th className="px-4 py-3 font-medium hidden md:table-cell">Agent</th>
-              <th className="px-4 py-3 font-medium hidden lg:table-cell">Est. Gift</th>
+            <tr>
+              <th>Name</th>
+              <th className="hidden sm:table-cell">Company</th>
+              <th>Stage</th>
+              <th className="hidden md:table-cell">Agent</th>
+              <th className="hidden lg:table-cell text-right">Est. gift</th>
             </tr>
           </thead>
           <tbody>
             {connectContacts.map((c) => (
-              <tr key={c.id} className="border-b border-white/5 hover:bg-white/5 cursor-pointer">
-                <td className="px-4 py-3 font-medium">{c.name}</td>
-                <td className="px-4 py-3 text-gray-400 hidden sm:table-cell">{c.company}</td>
-                <td className="px-4 py-3">
-                  <span className={`px-2 py-0.5 rounded-full text-xs ${stageColors[c.stage] ?? "bg-gray-500/20"}`}>
+              <tr key={c.id} className="cursor-pointer">
+                <td className="font-semibold text-white">{c.name}</td>
+                <td className="hidden sm:table-cell text-gray-400">{c.company}</td>
+                <td>
+                  <span className={`badge-pill border ${stageStyles[c.stage] ?? "bg-gray-500/15 text-gray-400"}`}>
                     {c.stage}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-gray-400 hidden md:table-cell">{c.agent}</td>
-                <td className="px-4 py-3 hidden lg:table-cell">{c.amount}</td>
+                <td className="hidden md:table-cell text-gray-400">{c.agent}</td>
+                <td className="hidden lg:table-cell text-right font-medium text-joshway-cyan">{c.amount}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-
-      <p className="text-xs text-gray-500">
-        Academy invites route through a server-side federation gateway — never hardcoded cross-project keys.
-      </p>
     </div>
   );
 }
