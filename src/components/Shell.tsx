@@ -1,12 +1,14 @@
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, ChevronDown, Sparkles, LogOut } from "lucide-react";
+import { LayoutDashboard, ChevronDown, Sparkles, LogOut, Wifi } from "lucide-react";
+import { federationStatus } from "@/lib/supabase/clients";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { personas, type ModuleId } from "@/data/mock";
 import { moduleMeta } from "@/data/modules";
 
 export function Shell() {
-  const { persona, setPersona } = useAuth();
+  const { persona, setPersona, logout } = useAuth();
+  const fed = federationStatus();
   const [pickerOpen, setPickerOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -67,6 +69,11 @@ export function Shell() {
               setPickerOpen(false);
               navigate("/");
             }}
+            onSignOut={() => {
+              logout();
+              setPickerOpen(false);
+              navigate("/login");
+            }}
             fullWidth
           />
         </div>
@@ -112,9 +119,19 @@ export function Shell() {
         <div className="border-b border-joshway-cyan/10 bg-gradient-to-r from-joshway-cyan/5 via-transparent to-joshway-purple/5 px-4 py-2">
           <div className="max-w-6xl mx-auto flex items-center gap-2 text-xs text-gray-400">
             <Sparkles className="w-3.5 h-3.5 text-joshway-cyan shrink-0" />
+            <Wifi className={`w-3.5 h-3.5 shrink-0 ${fed.live ? "text-emerald-400" : "text-amber-400"}`} />
             <span>
-              <span className="text-joshway-cyan font-medium">Preview build</span>
-              {" · "}Mock data · Ready for live Supabase federation when credentials are available
+              {fed.live ? (
+                <>
+                  <span className="text-emerald-400 font-medium">Federated</span>
+                  {" · "}4 live Supabase DBs · mock fallback where RLS blocks anon reads
+                </>
+              ) : (
+                <>
+                  <span className="text-joshway-cyan font-medium">Preview</span>
+                  {" · "}Configure VITE_*_SUPABASE env vars for live data
+                </>
+              )}
             </span>
             {currentModule && (
               <span className="ml-auto hidden sm:inline text-gray-500">
@@ -138,6 +155,7 @@ function PersonaButton({
   onToggle,
   onClose,
   onSelect,
+  onSignOut,
   fullWidth,
 }: {
   persona: (typeof personas)[0];
@@ -145,6 +163,7 @@ function PersonaButton({
   onToggle: () => void;
   onClose: () => void;
   onSelect: (p: (typeof personas)[0]) => void;
+  onSignOut: () => void;
   fullWidth?: boolean;
 }) {
   return (
@@ -171,6 +190,12 @@ function PersonaButton({
             <div className="px-3 py-2 text-[10px] font-semibold uppercase tracking-widest text-gray-500 border-b border-white/[0.06]">
               Switch persona (demo)
             </div>
+            <button
+              onClick={onSignOut}
+              className="w-full text-left px-3 py-2.5 text-xs text-gray-500 hover:text-gray-300 border-b border-white/[0.06] flex items-center gap-2"
+            >
+              <LogOut className="w-3.5 h-3.5" /> Sign out
+            </button>
             {personas.map((p) => (
               <button
                 key={p.id}

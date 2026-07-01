@@ -5,9 +5,11 @@ import { securityImprovements } from "@/data/mock";
 import { moduleMeta } from "@/data/modules";
 import type { ModuleId } from "@/data/mock";
 import { StatCard } from "@/components/ui/StatCard";
+import { federationStatus } from "@/lib/supabase/clients";
 
 export default function Home() {
   const { persona } = useAuth();
+  const fed = federationStatus();
   const visible = (Object.keys(moduleMeta) as ModuleId[]).filter((id) => persona.modules.includes(id));
 
   return (
@@ -26,7 +28,7 @@ export default function Home() {
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard label="Modules" value={String(visible.length)} accent="cyan" />
         <StatCard label="Platform" value="Unified" accent="purple" />
-        <StatCard label="Data" value="Preview" trend="Mock · federation-ready" accent="emerald" />
+        <StatCard label="Data" value={fed.live ? "Live" : "Preview"} trend={fed.live ? "4 Supabase DBs" : "Add env keys"} accent="emerald" />
         <StatCard label="Security" value="Hardened" trend="vs. Lovable originals" accent="amber" />
       </section>
 
