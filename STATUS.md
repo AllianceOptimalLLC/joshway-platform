@@ -2,6 +2,15 @@
 
 *Last updated: July 2, 2026*
 
+## July 2, 2026 — Light/dark theme (Lovable-matched default)
+
+- **Light mode is now the default** so first-time visitors see a look that matches the Lovable originals (white page, #f7f7f7 cards, dark ink). The existing dark identity is preserved behind a **toggle** (sidebar footer + mobile header + login page); choice persists in localStorage, applied pre-paint to avoid a flash.
+- Implemented via **CSS-variable semantic tokens** + Tailwind `darkMode: 'class'`. The `white` and `gray-*` utilities (and accent chip shades) are remapped to theme vars in `tailwind.config.js`, so every existing `text-white` / `bg-white/x` / `text-gray-N` auto-inverts between themes with **no per-file edits** to the ~20 page/component files. Tokens live in `src/index.css` (`:root` = light, `.dark` = dark).
+- **Font: Inter** (was Plus Jakarta Sans). The originals referenced TT Norms Pro but never shipped the font files, so they actually rendered in their Inter/system fallback — Inter is the faithful, license-safe match.
+- **Course player stays light in both themes** — `.academy-course-theme` pins the neutral ramp to light values so a `.dark` shell can't leak white text onto the light course canvas.
+- **Module accents realigned to the originals**: Academy → indigo (matches its own indigo course player), Connect → cyan (matches its cyan New Contact button). Base Camp emerald / Mission amber unchanged. Cyan stays the platform-wide primary-action (button) color.
+- Verified: clean build; 14-shot light+dark screenshot probe (computed bg/ink/font correct, zero page errors on every page); real-click course-player walkthrough still passes (freeze fix intact).
+
 ## July 2, 2026 — Showcase expansion (pre-demo)
 
 Read-only slices shipped across all four modules (no writes, no schema changes):

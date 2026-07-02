@@ -5,6 +5,7 @@ import { federationStatus } from "@/lib/supabase/clients";
 import { ArrowRight, Shield, Wifi } from "lucide-react";
 import { moduleMeta } from "@/data/modules";
 import type { ModuleId } from "@/data/mock";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function Login() {
   const { login } = useAuth();
@@ -12,7 +13,10 @@ export default function Login() {
   const fed = federationStatus();
 
   return (
-    <div className="min-h-screen bg-joshway-dark bg-mesh flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen bg-surface bg-mesh flex flex-col items-center justify-center p-6">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle compact />
+      </div>
       <div className="w-full max-w-lg">
         <div className="text-center mb-10">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-joshway-cyan to-joshway-purple flex items-center justify-center font-extrabold text-2xl text-joshway-dark mx-auto mb-6 shadow-glow">

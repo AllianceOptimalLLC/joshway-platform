@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { personas, type ModuleId } from "@/data/mock";
 import { moduleMeta } from "@/data/modules";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function Shell() {
   const { persona, setPersona, logout } = useAuth();
@@ -20,7 +21,7 @@ export function Shell() {
   const currentModule = visibleModules.find((id) => location.pathname.startsWith(moduleMeta[id].path));
 
   return (
-    <div className="min-h-screen flex bg-joshway-dark bg-mesh">
+    <div className="min-h-screen flex bg-surface bg-mesh">
       {/* Sidebar — desktop */}
       <aside className="hidden lg:flex w-64 flex-col fixed inset-y-0 left-0 border-r border-white/[0.06] bg-joshway-surface/60 backdrop-blur-xl z-40">
         <div className="p-5 border-b border-white/[0.06]">
@@ -58,7 +59,8 @@ export function Shell() {
           })}
         </nav>
 
-        <div className="p-3 border-t border-white/[0.06]">
+        <div className="p-3 border-t border-white/[0.06] space-y-2">
+          <ThemeToggle />
           <PersonaButton
             persona={persona}
             open={pickerOpen}
@@ -98,9 +100,12 @@ export function Shell() {
                 </NavLink>
               ))}
             </nav>
-            <button onClick={() => setPickerOpen(!pickerOpen)} className="w-8 h-8 rounded-full bg-gradient-to-br from-joshway-cyan/30 to-joshway-purple/30 text-xs font-bold shrink-0">
-              {persona.name.split(" ").map((n) => n[0]).join("")}
-            </button>
+            <div className="flex items-center gap-1 shrink-0">
+              <ThemeToggle compact />
+              <button onClick={() => setPickerOpen(!pickerOpen)} className="w-8 h-8 rounded-full bg-gradient-to-br from-joshway-cyan/30 to-joshway-purple/30 text-xs font-bold">
+                {persona.name.split(" ").map((n) => n[0]).join("")}
+              </button>
+            </div>
           </div>
           {pickerOpen && (
             <MobilePersonaPicker

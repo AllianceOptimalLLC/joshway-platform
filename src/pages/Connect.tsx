@@ -55,8 +55,8 @@ export default function Connect() {
       />
 
       <div className="grid sm:grid-cols-3 gap-3">
-        <StatCard label="Contacts" value={String(pipeline.contacts.length)} accent="purple" />
-        <StatCard label="Stages" value={String(pipeline.stages.length)} accent="cyan" />
+        <StatCard label="Contacts" value={String(pipeline.contacts.length)} accent="cyan" />
+        <StatCard label="Stages" value={String(pipeline.stages.length)} accent="purple" />
         <StatCard label="Pipeline" value={pipeline.source === "live" ? "Live" : "Demo"} accent="emerald" />
       </div>
 
@@ -67,19 +67,19 @@ export default function Connect() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search contacts, companies, tags..."
-            className="w-full pl-11 pr-4 py-3.5 rounded-2xl surface-card text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-joshway-purple/40"
+            className="w-full pl-11 pr-4 py-3.5 rounded-2xl surface-card text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-joshway-cyan/40"
           />
         </div>
         <div className="flex rounded-xl border border-white/10 overflow-hidden shrink-0">
           <button
             onClick={() => setView("kanban")}
-            className={`px-4 py-2.5 text-sm flex items-center gap-2 ${view === "kanban" ? "bg-joshway-purple/20 text-white" : "text-gray-500"}`}
+            className={`px-4 py-2.5 text-sm flex items-center gap-2 ${view === "kanban" ? "bg-joshway-cyan/20 text-white" : "text-gray-500"}`}
           >
             <LayoutGrid className="w-4 h-4" /> Kanban
           </button>
           <button
             onClick={() => setView("table")}
-            className={`px-4 py-2.5 text-sm flex items-center gap-2 ${view === "table" ? "bg-joshway-purple/20 text-white" : "text-gray-500"}`}
+            className={`px-4 py-2.5 text-sm flex items-center gap-2 ${view === "table" ? "bg-joshway-cyan/20 text-white" : "text-gray-500"}`}
           >
             <List className="w-4 h-4" /> Table
           </button>
@@ -93,7 +93,7 @@ export default function Connect() {
             onClick={() => setStageFilter(null)}
             className={`badge-pill border text-xs transition-colors ${
               stageFilter === null
-                ? "bg-joshway-purple/20 text-white border-joshway-purple/40"
+                ? "bg-joshway-cyan/20 text-white border-joshway-cyan/30"
                 : "bg-white/5 text-gray-400 border-white/10 hover:text-gray-200"
             }`}
           >
@@ -106,7 +106,7 @@ export default function Connect() {
               onClick={() => setStageFilter(stageFilter === s ? null : s)}
               className={`badge-pill border text-xs transition-colors ${
                 stageFilter === s
-                  ? (stageStyles[s] ?? "bg-joshway-purple/20 text-white border-joshway-purple/40")
+                  ? (stageStyles[s] ?? "bg-joshway-cyan/20 text-white border-joshway-cyan/30")
                   : "bg-white/5 text-gray-400 border-white/10 hover:text-gray-200"
               }`}
             >

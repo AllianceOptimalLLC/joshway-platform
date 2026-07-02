@@ -42,13 +42,13 @@ export default function Academy() {
       />
 
       <div className="grid grid-cols-3 gap-3">
-        <StatCard label="Courses" value={String(portfolio.courses.length)} accent="cyan" />
+        <StatCard label="Courses" value={String(portfolio.courses.length)} accent="purple" />
         <button
           type="button"
           onClick={() => document.getElementById("badge-collection")?.scrollIntoView({ behavior: "smooth" })}
           className="text-left"
         >
-          <StatCard label="Badges" value={String(earnedBadgeCount)} accent="purple" />
+          <StatCard label="Badges" value={String(earnedBadgeCount)} accent="cyan" />
         </button>
         <Link to="/academy/vault">
           <StatCard label="Vault" value="Media" accent="emerald" />
@@ -90,12 +90,12 @@ export default function Academy() {
                       }
                 }
                 className={`surface-card p-5 flex flex-col sm:flex-row sm:items-center gap-5 group transition-colors ${
-                  inert ? "opacity-70" : "hover:border-joshway-cyan/20 cursor-pointer"
+                  inert ? "opacity-70" : "hover:border-joshway-purple/20 cursor-pointer"
                 }`}
               >
                 <div
                   className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${
-                    inert ? "bg-white/5" : "bg-joshway-cyan/15 border border-joshway-cyan/20"
+                    inert ? "bg-white/5" : "bg-joshway-purple/15 border border-joshway-purple/20"
                   }`}
                 >
                   {locked ? (
@@ -103,7 +103,7 @@ export default function Academy() {
                   ) : comingSoon ? (
                     <Hourglass className="w-6 h-6 text-gray-500" />
                   ) : (
-                    <BookOpen className="w-6 h-6 text-joshway-cyan" />
+                    <BookOpen className="w-6 h-6 text-joshway-purple" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">

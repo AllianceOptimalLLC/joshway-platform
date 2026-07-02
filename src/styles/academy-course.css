@@ -1,5 +1,16 @@
-/* Lovable JOSHWAY Academy design tokens — scoped to course player routes */
+/* Lovable JOSHWAY Academy design tokens — scoped to course player routes.
+   The course player is always light (matches the original Academy), so pin
+   the platform neutral ramp to light values here too — otherwise a .dark
+   toggle on <html> would leak white text onto the light course canvas. */
 .academy-course-theme {
+  --wk: 24 24 27;
+  --g-100: 39 39 42;
+  --g-200: 63 63 70;
+  --g-300: 82 82 91;
+  --g-400: 107 114 128;
+  --g-500: 113 113 122;
+  --g-600: 161 161 170;
+
   --background: 0 0% 100%;
   --foreground: 240 6% 12%;
   --card: 0 0% 97%;
