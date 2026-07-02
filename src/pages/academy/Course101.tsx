@@ -50,6 +50,7 @@ const Course = () => {
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const isRetakeRequest = searchParams.get("retake") === "1";
+  const isResumeRequest = searchParams.get("resume") === "true";
 
   const [currentScreen, setCurrentScreen] = useState(0);
   const [completedScreens, setCompletedScreens] = useState<Set<number>>(new Set());
@@ -126,7 +127,10 @@ const Course = () => {
   // ── Load progress ──────────────────────────────────────────────
   useEffect(() => {
     const fetchProgress = async () => {
-      if (!user) return;
+      if (!user) {
+        setLoading(false);
+        return;
+      }
       const { data } = await supabase
         .from("course_progress")
         .select("*")
@@ -145,9 +149,11 @@ const Course = () => {
         const isLocked = (data as any).completion_locked === true;
         setCompletionLocked(isLocked);
 
-        if (data.status === "completed" && allChaptersComplete(saved) && !isRetakeRequest) {
+        if (data.status === "completed" && allChaptersComplete(saved) && !isRetakeRequest && !isResumeRequest) {
           setCurrentScreen(COMPLETION_SCREEN);
-        } else if (data.current_screen > 0 && data.current_screen < COMPLETION_SCREEN && !resumeShownRef.current) {
+        } else if (isResumeRequest && data.current_screen > 0 && data.current_screen < COMPLETION_SCREEN) {
+          setCurrentScreen(data.current_screen);
+        } else if (data.current_screen > 0 && data.current_screen < COMPLETION_SCREEN && !resumeShownRef.current && !isRetakeRequest) {
           resumeShownRef.current = true;
           setResumeScreen(data.current_screen);
           setShowResumeModal(true);
@@ -156,7 +162,7 @@ const Course = () => {
       setLoading(false);
     };
     fetchProgress();
-  }, [user, navigate, isRetakeRequest]);
+  }, [user, navigate, isRetakeRequest, isResumeRequest]);
 
   // ── Retake trigger (moved after retakeCourse definition via separate useEffect below) ──
 
@@ -335,13 +341,13 @@ const Course = () => {
     }
   }, [user]);
 
-  // ── Retake trigger ─────────────────────────────────────────────
+  // ── Retake / resume query cleanup ──────────────────────────────
   useEffect(() => {
-    if (!loading && isRetakeRequest && user) {
+    if (!loading && user && (isRetakeRequest || isResumeRequest)) {
       setSearchParams({}, { replace: true });
-      retakeCourse();
+      if (isRetakeRequest) retakeCourse();
     }
-  }, [loading, isRetakeRequest, user, retakeCourse, setSearchParams]);
+  }, [loading, isRetakeRequest, isResumeRequest, user, retakeCourse, setSearchParams]);
 
   // ── Derived state ──────────────────────────────────────────────
   const progressPercent = useMemo(

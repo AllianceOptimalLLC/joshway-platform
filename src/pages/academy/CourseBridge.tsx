@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -20,6 +20,8 @@ import BridgeComplete from "@/components/course/bridge/BridgeComplete";
 const CourseBridge = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const isResumeRequest = searchParams.get("resume") === "true";
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
@@ -36,7 +38,10 @@ const CourseBridge = () => {
   // ── Gate: Bridge requires Foundation completion ─────────────────
   useEffect(() => {
     const checkUnlock = async () => {
-      if (!user) return;
+      if (!user) {
+        setUnlocked(false);
+        return;
+      }
       const { data } = await supabase
         .from("course_progress")
         .select("status, completion_locked")
@@ -52,7 +57,10 @@ const CourseBridge = () => {
   // ── Load Bridge progress ────────────────────────────────────────
   useEffect(() => {
     const load = async () => {
-      if (!user) return;
+      if (!user) {
+        setLoading(false);
+        return;
+      }
       const { data } = await supabase
         .from("course_progress")
         .select("current_screen, completed_screens, completion_locked, status, elevator_pitch")
@@ -72,9 +80,10 @@ const CourseBridge = () => {
         }
       }
       setLoading(false);
+      if (isResumeRequest) setSearchParams({}, { replace: true });
     };
     load();
-  }, [user]);
+  }, [user, isResumeRequest, setSearchParams]);
 
   const saveProgress = useCallback(
     async (nextScreen: number, completed: Set<number>, extra?: Record<string, unknown>) => {
