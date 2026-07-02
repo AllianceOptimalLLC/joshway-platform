@@ -1,6 +1,19 @@
 # JOSHWAY Platform — Build Status
 
-*Last updated: July 1, 2026*
+*Last updated: July 2, 2026*
+
+## July 2, 2026 — Showcase expansion (pre-demo)
+
+Read-only slices shipped across all four modules (no writes, no schema changes):
+
+- **Academy**: instant dashboard paint (fixed 5s dead click window on Review/Resume), Leadership Lab now non-clickable "Coming Soon", new Media Vault page at `/academy/vault` (live `video_vault_items`, lightbox player)
+- **Connect**: read-only contact detail at `/connect/contacts/:id` (info, giving, activity, notes; live-ready with mock fallback), working search + stage filter chips, clickable kanban/table rows; mock contacts now pair with mock stage names
+- **Mission**: SME Payouts section on `/mission` (live `invoices` aggregated, names masked to initials), month-grouped Timeline view in program detail sessions tab
+- **Base Camp**: Board Elections (live `votes`, support_areas normalized) and Overlap Scheduling (live `overlap_polls`) sections
+
+Verified: clean production build; 19-point headless click-through against live DBs (16 real sessions in timeline, 3 live vault videos, 15 live invoices). Two live-data bugs fixed along the way (null `support_areas` crash; live stage names orphaning mock contacts).
+
+Lesson learned: live-DB shapes differ from Lovable-era assumptions (null jsonb arrays, renamed stages) — probe with read-only SELECTs before building against a table.
 
 ## Live URLs
 
