@@ -1,0 +1,57 @@
+/* Lovable JOSHWAY Academy design tokens — scoped to course player routes */
+.academy-course-theme {
+  --background: 0 0% 100%;
+  --foreground: 240 6% 12%;
+  --card: 0 0% 97%;
+  --card-foreground: 240 6% 12%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 6% 12%;
+  --primary: 231 84% 71%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 192 84% 60%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 0 0% 97%;
+  --muted-foreground: 0 0% 27%;
+  --accent: 0 0% 97%;
+  --accent-foreground: 240 6% 12%;
+  --destructive: 4 100% 59%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 0 0% 90%;
+  --input: 0 0% 100%;
+  --ring: 231 84% 71%;
+  --radius: 0.75rem;
+}
+
+.academy-course-theme .bg-background {
+  background-color: hsl(var(--background));
+}
+.academy-course-theme .text-foreground {
+  color: hsl(var(--foreground));
+}
+.academy-course-theme .bg-card {
+  background-color: hsl(var(--card));
+}
+.academy-course-theme .text-muted-foreground {
+  color: hsl(var(--muted-foreground));
+}
+.academy-course-theme .bg-muted {
+  background-color: hsl(var(--muted));
+}
+.academy-course-theme .bg-primary {
+  background-color: hsl(var(--primary));
+}
+.academy-course-theme .text-primary {
+  color: hsl(var(--primary));
+}
+.academy-course-theme .text-primary-foreground {
+  color: hsl(var(--primary-foreground));
+}
+.academy-course-theme .border-border {
+  border-color: hsl(var(--border));
+}
+.academy-course-theme .ring-offset-background {
+  --tw-ring-offset-color: hsl(var(--background));
+}
+.academy-course-theme .focus-visible\:ring-ring:focus-visible {
+  --tw-ring-color: hsl(var(--ring));
+}

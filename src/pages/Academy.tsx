@@ -1,4 +1,6 @@
+import { useNavigate } from "react-router-dom";
 import { Award, BookOpen, Lock, Play, Star } from "lucide-react";
+import { academyCourseHref } from "@/lib/academy/routes";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatCard } from "@/components/ui/StatCard";
 import { DataSourceBadge } from "@/components/ui/DataSourceBadge";
@@ -6,6 +8,7 @@ import { useAcademyCourses } from "@/hooks/useFederatedData";
 import { academyBadges } from "@/data/mock";
 
 export default function Academy() {
+  const navigate = useNavigate();
   const { data, isLoading } = useAcademyCourses();
   const courses = data?.data ?? [];
   const source = data?.source ?? "mock";
@@ -50,9 +53,20 @@ export default function Academy() {
                   </div>
                 </div>
                 {status !== "locked" && (
-                  <button className="btn-primary shrink-0">
+                  <button
+                    type="button"
+                    className="btn-primary shrink-0"
+                    onClick={() =>
+                      navigate(
+                        academyCourseHref(c.slug, {
+                          retake: status === "completed",
+                          resume: status === "in_progress",
+                        })
+                      )
+                    }
+                  >
                     <Play className="w-4 h-4" />
-                    {status === "completed" ? "Review" : "Resume"}
+                    {status === "completed" ? "Review" : status === "in_progress" ? "Resume" : "Start"}
                   </button>
                 )}
               </div>
