@@ -130,9 +130,47 @@ export function useMissionData() {
         .limit(20);
       const { data: programs, error: pErr } = await missionDb
         .from("bridge_programs")
-        .select("program_name, school_name, status, start_date, end_date")
+        .select("id, program_name, school_name, status, start_date, end_date, approved_session_count, program_type")
         .order("created_at", { ascending: false })
         .limit(10);
+
+      const programIds = (programs ?? []).map((p) => p.id);
+      let sessionCountByProgram = new Map<string, number>();
+      let captainCountByProgram = new Map<string, number>();
+
+      if (programIds.length) {
+        const { data: sessionRows } = await missionDb
+          .from("bridge_sessions")
+          .select("id, program_id")
+          .in("program_id", programIds);
+
+        for (const row of sessionRows ?? []) {
+          sessionCountByProgram.set(
+            row.program_id,
+            (sessionCountByProgram.get(row.program_id) ?? 0) + 1
+          );
+        }
+
+        const sessionIds = (sessionRows ?? []).map((s) => s.id);
+        if (sessionIds.length) {
+          const { data: captainLinks } = await missionDb
+            .from("bridge_session_site_captains")
+            .select("session_id, site_captain_id, bridge_sessions(program_id)")
+            .in("session_id", sessionIds);
+
+          const captainsSeenPerProgram = new Map<string, Set<string>>();
+          for (const link of captainLinks ?? []) {
+            const programId = (link.bridge_sessions as { program_id?: string } | null)?.program_id;
+            if (!programId) continue;
+            const set = captainsSeenPerProgram.get(programId) ?? new Set<string>();
+            set.add(link.site_captain_id);
+            captainsSeenPerProgram.set(programId, set);
+          }
+          captainCountByProgram = new Map(
+            [...captainsSeenPerProgram.entries()].map(([id, set]) => [id, set.size])
+          );
+        }
+      }
       const studentRows =
         !sErr && students?.length
           ? students.map((s) => {
@@ -150,11 +188,18 @@ export function useMissionData() {
       const programRows =
         !pErr && programs?.length
           ? programs.map((p) => ({
+              id: p.id,
               name: p.program_name,
               site: p.school_name ?? "—",
-              sessions: 12,
-              captains: 2,
+              sessions:
+                sessionCountByProgram.get(p.id) ??
+                p.approved_session_count ??
+                0,
+              captains: captainCountByProgram.get(p.id) ?? 0,
               status: (p.status as string) ?? "Active",
+              programType: p.program_type as string | undefined,
+              startDate: p.start_date as string | null | undefined,
+              endDate: p.end_date as string | null | undefined,
             }))
           : mockPrograms;
       return {

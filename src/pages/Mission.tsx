@@ -1,10 +1,13 @@
-import { Calendar, GraduationCap, Users, AlertTriangle } from "lucide-react";
+import { Calendar, ChevronRight, GraduationCap, Users, AlertTriangle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatCard } from "@/components/ui/StatCard";
 import { DataSourceBadge } from "@/components/ui/DataSourceBadge";
 import { useMissionData } from "@/hooks/useFederatedData";
+import { formatMissionDate } from "@/lib/mission/format";
 
 export default function Mission() {
+  const navigate = useNavigate();
   const { data, isLoading } = useMissionData();
   const mission = data ?? { students: [], programs: [], source: "mock" as const };
 
@@ -77,15 +80,31 @@ export default function Mission() {
             <h2 className="font-bold text-lg mb-4">Bridge Programs</h2>
             <div className="grid sm:grid-cols-2 gap-4">
               {mission.programs.map((p) => (
-                <div key={p.name} className="surface-card-hover p-5">
-                  <div className="flex justify-between items-start mb-3">
-                    <h3 className="font-bold text-white">{p.name}</h3>
-                    <span className="badge-pill bg-emerald-500/15 text-emerald-300 border border-emerald-500/20">{p.status}</span>
+                <button
+                  key={p.id ?? p.name}
+                  type="button"
+                  onClick={() => navigate(`/mission/programs/${p.id}`)}
+                  className="surface-card-hover p-5 text-left w-full group"
+                >
+                  <div className="flex justify-between items-start mb-3 gap-2">
+                    <h3 className="font-bold text-white group-hover:text-amber-200 transition-colors">{p.name}</h3>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="badge-pill bg-emerald-500/15 text-emerald-300 border border-emerald-500/20 capitalize">
+                        {p.status}
+                      </span>
+                      <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-amber-400 transition-colors" />
+                    </div>
                   </div>
                   <p className="text-sm text-gray-400">
                     {p.site} · <span className="text-gray-300">{p.sessions} sessions</span> · {p.captains} site captains
                   </p>
-                </div>
+                  {"startDate" in p && p.startDate && (
+                    <p className="text-xs text-gray-500 mt-2">
+                      {formatMissionDate(p.startDate)}
+                      {"endDate" in p && p.endDate ? ` – ${formatMissionDate(p.endDate)}` : ""}
+                    </p>
+                  )}
+                </button>
               ))}
             </div>
           </section>

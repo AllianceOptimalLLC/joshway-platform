@@ -27,6 +27,7 @@
 - [x] Connect **Kanban + Table** pipeline views
 - [x] Live/mock data badges per module
 - [x] Email masking for Mission Control live student rows
+- [x] Mission Bridge program cards → read-only detail (overview, sessions, site captains)
 
 ### Data layer
 - [x] **Federated reads** from same Supabase DBs as Lovable apps
@@ -46,8 +47,11 @@
 |------|-------|
 | **Unified Supabase Auth** | Demo personas only; real SSO is next |
 | **Write operations** | Read-only federation preview |
-| **Full feature parity** | ~10% of Lovable features ported; shell + core views |
-| **Mission Control auth rewrite** | Required before production cutover |
+| **Federation gateway** | Edge function to replace cross-project anon keys in frontend |
+| **Neon DB migration** | Port from Supabase when ready for unified stack (backlog) |
+| **Full feature parity** | ~15% of Lovable features ported; shell + Academy player + Mission program detail |
+| **Mission Control auth rewrite** | Supabase Auth + signed server tokens — required before live writes |
+| **Mission program detail (writes)** | Scheduling, invites, milestones — after Phase 1 security |
 | **DNS** | `platform.joshway.org` not configured |
 | **Lovable apps retirement** | Still running in parallel |
 
@@ -75,8 +79,8 @@ Old Lovable apps continue using the **same four databases** — safe parallel op
 
 ## Next session priorities
 
-1. Supabase Auth for `@joshway.org` staff (Google SSO)
-2. Port Connect contact detail + authenticated reads
-3. Academy course player shell from Lovable `Course.tsx`
-4. Mission admin routes behind signed JWT pattern
-5. Custom domain + cutover plan
+1. Connect contact detail (read-only, live pipeline)
+2. Mission program detail writes via federation gateway (after Phase 1 security)
+3. Supabase Auth for `@joshway.org` staff (Google SSO) — replace demo personas
+4. Federation gateway edge function (no cross-project keys in frontend)
+5. Neon migration planning (when cutting over from federated Supabase)

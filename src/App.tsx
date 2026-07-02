@@ -9,6 +9,7 @@ import Academy from "@/pages/Academy";
 import Connect from "@/pages/Connect";
 import BaseCamp from "@/pages/BaseCamp";
 import Mission from "@/pages/Mission";
+import MissionProgramDetail from "@/pages/mission/MissionProgramDetail";
 import AcademyCourseShell from "@/pages/academy/AcademyCourseShell";
 import Course101 from "@/pages/academy/Course101";
 import CourseBridge from "@/pages/academy/CourseBridge";
@@ -55,6 +56,14 @@ export default function App() {
             <Route path="connect" element={<ModuleGuard module="connect"><Connect /></ModuleGuard>} />
             <Route path="basecamp" element={<ModuleGuard module="basecamp"><BaseCamp /></ModuleGuard>} />
             <Route path="mission" element={<ModuleGuard module="mission"><Mission /></ModuleGuard>} />
+            <Route
+              path="mission/programs/:programId"
+              element={
+                <ModuleGuard module="mission">
+                  <MissionProgramDetail />
+                </ModuleGuard>
+              }
+            />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

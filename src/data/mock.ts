@@ -84,8 +84,8 @@ export const missionStudents = [
 ];
 
 export const missionPrograms = [
-  { name: "Spring Bridge 2026", site: "Philadelphia", sessions: 12, captains: 3, status: "Active" },
-  { name: "Summer Leadership Lab", site: "Baltimore", sessions: 8, captains: 2, status: "Planning" },
+  { id: "mock-spring-bridge", name: "Spring Bridge 2026", site: "Philadelphia", sessions: 12, captains: 3, status: "Active" },
+  { id: "mock-summer-lab", name: "Summer Leadership Lab", site: "Baltimore", sessions: 8, captains: 2, status: "Planning" },
 ];
 
 export const securityImprovements = [
