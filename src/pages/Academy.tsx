@@ -1,3 +1,4 @@
+import { startTransition } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { BookOpen, Hourglass, Lock, Play, RotateCcw, Star } from "lucide-react";
 import { academyCourseHref } from "@/lib/academy/routes";
@@ -17,12 +18,18 @@ export default function Academy() {
   const earnedBadgeCount = getEarnedBadges(persona.email).length;
 
   const openCourse = (slug: string, status: string) => {
-    navigate(
-      academyCourseHref(slug, {
-        retake: status === "completed",
-        resume: status === "in_progress",
-      })
-    );
+    // Completed courses open at the completion screen (celebration + explicit
+    // Retake button) — Review must never silently reset progress.
+    // startTransition: mounting the framer-motion course player at sync
+    // priority (inside a trusted click event) hard-freezes the page; a
+    // transition mounts it like a direct page load, which is stable.
+    startTransition(() => {
+      navigate(
+        academyCourseHref(slug, {
+          resume: status === "in_progress",
+        })
+      );
+    });
   };
 
   return (

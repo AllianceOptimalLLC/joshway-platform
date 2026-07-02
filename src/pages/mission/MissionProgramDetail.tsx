@@ -261,7 +261,12 @@ export default function MissionProgramDetail() {
             </div>
           )}
           {sessions.length === 0 ? (
-            <div className="surface-card p-12 text-center text-gray-500">No sessions scheduled yet.</div>
+            <div className="surface-card p-12 text-center text-gray-500">
+              No sessions scheduled yet
+              {program.approved_session_count
+                ? ` — ${program.approved_session_count} approved and awaiting scheduling.`
+                : "."}
+            </div>
           ) : sessionView === "timeline" ? (
             <div className="space-y-6">
               {groupSessionsByMonth(sessions).map((group) => (

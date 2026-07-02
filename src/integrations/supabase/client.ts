@@ -36,6 +36,19 @@ class QueryBuilder {
     return this;
   }
 
+  // Chainable no-ops so Lovable-ported queries don't throw on the shim
+  limit(_n: number) {
+    return this;
+  }
+
+  order(_col: string, _opts?: { ascending?: boolean }) {
+    return this;
+  }
+
+  in(_col: string, _vals: unknown[]) {
+    return this;
+  }
+
   update(data: Record<string, unknown>) {
     this.mode = "update";
     this.payload = data;

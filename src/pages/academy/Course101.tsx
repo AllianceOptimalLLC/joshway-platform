@@ -1,9 +1,7 @@
-import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef, startTransition } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { motion, AnimatePresence } from "framer-motion";
-import { EASE_NARRATIVE, DURATIONS } from "@/lib/academy/motion";
 import joshwayLogo from "@/assets/joshway-logo.png";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { useToast } from "@/hooks/use-toast";
@@ -52,7 +50,13 @@ const Course = () => {
   const isRetakeRequest = searchParams.get("retake") === "1";
   const isResumeRequest = searchParams.get("resume") === "true";
 
-  const [currentScreen, setCurrentScreen] = useState(0);
+  const [currentScreen, setCurrentScreenRaw] = useState(0);
+  // Screen swaps must render at transition priority: mounting framer-motion
+  // screens at sync priority (trusted click events) hard-freezes the page.
+  const setCurrentScreen = useCallback(
+    (v: number | ((s: number) => number)) => startTransition(() => setCurrentScreenRaw(v)),
+    []
+  );
   const [completedScreens, setCompletedScreens] = useState<Set<number>>(new Set());
   const completedScreensRef = useRef<Set<number>>(new Set());
   const currentScreenRef = useRef(0);
@@ -149,7 +153,9 @@ const Course = () => {
         const isLocked = (data as any).completion_locked === true;
         setCompletionLocked(isLocked);
 
-        if (data.status === "completed" && allChaptersComplete(saved) && !isRetakeRequest && !isResumeRequest) {
+        // completion_locked is the source of truth — show the celebration screen
+        // even if completed_screens was wiped by a prior retake reset
+        if ((isLocked || (data.status === "completed" && allChaptersComplete(saved))) && !isRetakeRequest && !isResumeRequest) {
           setCurrentScreen(COMPLETION_SCREEN);
         } else if (isResumeRequest && data.current_screen > 0 && data.current_screen < COMPLETION_SCREEN) {
           setCurrentScreen(data.current_screen);
@@ -450,8 +456,8 @@ const Course = () => {
       />
     ),
     13: <ScreenFounderClosing onNext={goNext} onBack={goBack} />,
-    // Completion / Almost There
-    [COMPLETION_SCREEN]: allChaptersComplete(completedScreens) ? (
+    // Completion / Almost There — completionLocked counts as complete
+    [COMPLETION_SCREEN]: allChaptersComplete(completedScreens) || completionLocked ? (
       <ScreenCompletion onReturn={() => navigate("/academy")} onRetake={retakeCourse} />
     ) : (
       <ScreenAlmostThere
@@ -462,7 +468,7 @@ const Course = () => {
         }}
       />
     ),
-  }), [goNext, goBack, exploredPillars, commitments, commitmentRecipientName, completedScreens, savePartial, saveProgress, navigate, retakeCourse]);
+  }), [goNext, goBack, exploredPillars, commitments, commitmentRecipientName, completedScreens, completionLocked, savePartial, saveProgress, navigate, retakeCourse]);
 
   // ── Loading ────────────────────────────────────────────────────
   if (loading) {
@@ -496,20 +502,18 @@ const Course = () => {
         </div>
       )}
 
-      <AnimatePresence mode="popLayout" initial={false}>
-        <motion.div
-          key={currentScreen}
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: DURATIONS.screen, ease: EASE_NARRATIVE }}
-          className="min-h-dvh"
-          aria-live="polite"
-          aria-label={`Step ${currentScreen + 1} of ${TOTAL_SCREENS}`}
-        >
-          {screens[currentScreen]}
-        </motion.div>
-      </AnimatePresence>
+      {/* CSS screen transition — AnimatePresence screen swaps hard-froze the
+          page (framer-motion frameloop spins forever under sync-priority
+          renders from trusted click events). Keyed div remount + CSS keyframes
+          give the same fade-and-rise without framer-motion in the swap path. */}
+      <div
+        key={currentScreen}
+        className="min-h-dvh course-screen-enter"
+        aria-live="polite"
+        aria-label={`Step ${currentScreen + 1} of ${TOTAL_SCREENS}`}
+      >
+        {screens[currentScreen]}
+      </div>
 
       <ResumeModal
         open={showResumeModal}

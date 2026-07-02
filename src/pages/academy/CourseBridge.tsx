@@ -1,12 +1,10 @@
-import { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo, startTransition } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { logEvent } from "@/lib/academy/eventLogger";
 import { logger } from "@/lib/academy/logger";
-import { EASE_NARRATIVE, DURATIONS } from "@/lib/academy/motion";
 import joshwayLogo from "@/assets/joshway-logo.png";
 import {
   BRIDGE_COURSE_ID,
@@ -25,11 +23,21 @@ const CourseBridge = () => {
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
-  const [currentScreen, setCurrentScreen] = useState(0);
+  const [currentScreen, setCurrentScreenRaw] = useState(0);
+  // Screen swaps must render at transition priority: mounting framer-motion
+  // screens at sync priority (trusted click events) hard-freezes the page.
+  const setCurrentScreen = useCallback(
+    (v: number | ((s: number) => number)) => startTransition(() => setCurrentScreenRaw(v)),
+    []
+  );
   const [completedScreens, setCompletedScreens] = useState<Set<number>>(new Set());
   const [pledgeText, setPledgeText] = useState("");
   const [completionLocked, setCompletionLocked] = useState(false);
-  const [showComplete, setShowComplete] = useState(false);
+  const [showComplete, setShowCompleteRaw] = useState(false);
+  const setShowComplete = useCallback(
+    (v: boolean) => startTransition(() => setShowCompleteRaw(v)),
+    []
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [unlocked, setUnlocked] = useState<boolean | null>(null);
 
@@ -260,38 +268,30 @@ const CourseBridge = () => {
             aria-valuemin={0}
             aria-valuemax={100}
           >
-            <motion.div
-              className="h-full rounded-full bg-primary"
-              initial={false}
-              animate={{ width: `${Math.max(progressPercent, 4)}%` }}
-              transition={{ duration: DURATIONS.screen, ease: EASE_NARRATIVE }}
+            <div
+              className="h-full rounded-full bg-primary transition-[width] duration-500 ease-out"
+              style={{ width: `${Math.max(progressPercent, 4)}%` }}
             />
           </div>
         </div>
       </div>
 
-      <AnimatePresence mode="popLayout" initial={false}>
-        <motion.div
-          key={currentScreen}
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: DURATIONS.screen, ease: EASE_NARRATIVE }}
-          className="min-h-dvh"
-          aria-live="polite"
-        >
-          {screenData && (
-            <BridgeScreen
-              screen={screenData}
-              onNext={goNext}
-              onBack={currentScreen > 0 ? goBack : undefined}
-              pledgeText={pledgeText}
-              onPledgeTextChange={setPledgeText}
-              isSubmitting={isSubmitting}
-            />
-          )}
-        </motion.div>
-      </AnimatePresence>
+      {/* CSS screen transition — AnimatePresence screen swaps hard-froze the
+          page (framer-motion frameloop spins forever under sync-priority
+          renders from trusted click events). Keyed div remount + CSS keyframes
+          give the same fade-and-rise without framer-motion in the swap path. */}
+      <div key={currentScreen} className="min-h-dvh course-screen-enter" aria-live="polite">
+        {screenData && (
+          <BridgeScreen
+            screen={screenData}
+            onNext={goNext}
+            onBack={currentScreen > 0 ? goBack : undefined}
+            pledgeText={pledgeText}
+            onPledgeTextChange={setPledgeText}
+            isSubmitting={isSubmitting}
+          />
+        )}
+      </div>
     </div>
   );
 };
