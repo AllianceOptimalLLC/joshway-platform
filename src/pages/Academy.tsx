@@ -1,5 +1,5 @@
-import { useNavigate } from "react-router-dom";
-import { BookOpen, Lock, Play, RotateCcw, Star } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { BookOpen, Hourglass, Lock, Play, RotateCcw, Star } from "lucide-react";
 import { academyCourseHref } from "@/lib/academy/routes";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatCard } from "@/components/ui/StatCard";
@@ -43,7 +43,9 @@ export default function Academy() {
         >
           <StatCard label="Badges" value={String(earnedBadgeCount)} accent="purple" />
         </button>
-        <StatCard label="Vault" value="Media" accent="emerald" />
+        <Link to="/academy/vault">
+          <StatCard label="Vault" value="Media" accent="emerald" />
+        </Link>
       </div>
 
       {isLoading ? (
@@ -52,16 +54,26 @@ export default function Academy() {
         <div className="space-y-3">
           {portfolio.courses.map((c) => {
             const locked = c.status === "locked";
+            const comingSoon = c.status === "coming_soon";
+            const inert = locked || comingSoon;
             const actionLabel =
-              c.status === "completed" ? "Review" : c.status === "in_progress" ? "Resume" : locked ? "Locked" : "Start";
+              c.status === "completed"
+                ? "Review"
+                : c.status === "in_progress"
+                  ? "Resume"
+                  : locked
+                    ? "Locked"
+                    : comingSoon
+                      ? "Coming Soon"
+                      : "Start";
             return (
               <div
                 key={c.slug}
-                role={locked ? undefined : "button"}
-                tabIndex={locked ? undefined : 0}
-                onClick={locked ? undefined : () => openCourse(c.slug, c.status)}
+                role={inert ? undefined : "button"}
+                tabIndex={inert ? undefined : 0}
+                onClick={inert ? undefined : () => openCourse(c.slug, c.status)}
                 onKeyDown={
-                  locked
+                  inert
                     ? undefined
                     : (e) => {
                         if (e.key === "Enter" || e.key === " ") {
@@ -71,16 +83,18 @@ export default function Academy() {
                       }
                 }
                 className={`surface-card p-5 flex flex-col sm:flex-row sm:items-center gap-5 group transition-colors ${
-                  locked ? "opacity-70" : "hover:border-joshway-cyan/20 cursor-pointer"
+                  inert ? "opacity-70" : "hover:border-joshway-cyan/20 cursor-pointer"
                 }`}
               >
                 <div
                   className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${
-                    locked ? "bg-white/5" : "bg-joshway-cyan/15 border border-joshway-cyan/20"
+                    inert ? "bg-white/5" : "bg-joshway-cyan/15 border border-joshway-cyan/20"
                   }`}
                 >
                   {locked ? (
                     <Lock className="w-6 h-6 text-gray-600" />
+                  ) : comingSoon ? (
+                    <Hourglass className="w-6 h-6 text-gray-500" />
                   ) : (
                     <BookOpen className="w-6 h-6 text-joshway-cyan" />
                   )}
@@ -99,20 +113,25 @@ export default function Academy() {
                       />
                     </div>
                     <span className="text-xs text-gray-500 capitalize w-24">
-                      {c.status.replace("_", " ")}
+                      {c.status.replace(/_/g, " ")}
                     </span>
                   </div>
                 </div>
-                {!locked && (
-                  <span className="btn-primary shrink-0 pointer-events-none">
-                    {c.status === "completed" ? (
-                      <RotateCcw className="w-4 h-4" />
-                    ) : (
-                      <Play className="w-4 h-4" />
-                    )}
-                    {actionLabel}
-                  </span>
-                )}
+                {!locked &&
+                  (comingSoon ? (
+                    <span className="badge-pill shrink-0 bg-white/5 text-gray-400 border border-white/10">
+                      {actionLabel}
+                    </span>
+                  ) : (
+                    <span className="btn-primary shrink-0 pointer-events-none">
+                      {c.status === "completed" ? (
+                        <RotateCcw className="w-4 h-4" />
+                      ) : (
+                        <Play className="w-4 h-4" />
+                      )}
+                      {actionLabel}
+                    </span>
+                  ))}
               </div>
             );
           })}

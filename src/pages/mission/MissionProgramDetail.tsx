@@ -31,6 +31,36 @@ const sessionTypeTone: Record<string, string> = {
   post_bridge: "bg-joshway-purple/15 text-joshway-purple border-joshway-purple/25",
 };
 
+interface TimelineGroup<S> {
+  label: string;
+  sortKey: string;
+  sessions: S[];
+}
+
+function groupSessionsByMonth<S extends { session_date: string | null }>(sessions: S[]): TimelineGroup<S>[] {
+  const groups = new Map<string, TimelineGroup<S>>();
+  for (const s of sessions) {
+    let label = "Unscheduled";
+    let sortKey = "9999-99";
+    if (s.session_date) {
+      const d = new Date(`${s.session_date}T12:00:00`);
+      if (!Number.isNaN(d.getTime())) {
+        label = d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+        sortKey = s.session_date.slice(0, 7);
+      }
+    }
+    const g = groups.get(label) ?? { label, sortKey, sessions: [] };
+    g.sessions.push(s);
+    groups.set(label, g);
+  }
+  return [...groups.values()]
+    .sort((a, b) => a.sortKey.localeCompare(b.sortKey))
+    .map((g) => ({
+      ...g,
+      sessions: [...g.sessions].sort((a, b) => (a.session_date ?? "").localeCompare(b.session_date ?? "")),
+    }));
+}
+
 function Field({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div>
@@ -44,6 +74,7 @@ export default function MissionProgramDetail() {
   const { programId } = useParams<{ programId: string }>();
   const navigate = useNavigate();
   const [tab, setTab] = useState<DetailTab>("overview");
+  const [sessionView, setSessionView] = useState<"list" | "timeline">("list");
   const { data, isLoading, isError, error } = useMissionProgram(programId);
 
   if (isLoading) {
@@ -213,8 +244,63 @@ export default function MissionProgramDetail() {
 
       {tab === "sessions" && (
         <section className="space-y-3">
+          {sessions.length > 0 && (
+            <div className="flex rounded-xl border border-white/10 overflow-hidden w-fit">
+              {(["list", "timeline"] as const).map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => setSessionView(v)}
+                  className={`px-4 py-2 text-sm capitalize ${
+                    sessionView === v ? "bg-amber-500/20 text-white" : "text-gray-500 hover:text-gray-300"
+                  }`}
+                >
+                  {v}
+                </button>
+              ))}
+            </div>
+          )}
           {sessions.length === 0 ? (
             <div className="surface-card p-12 text-center text-gray-500">No sessions scheduled yet.</div>
+          ) : sessionView === "timeline" ? (
+            <div className="space-y-6">
+              {groupSessionsByMonth(sessions).map((group) => (
+                <div key={group.label}>
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">
+                    {group.label}
+                  </h3>
+                  <ol className="relative border-l border-white/10 ml-2 space-y-4">
+                    {group.sessions.map((session) => (
+                      <li key={session.id} className="pl-5 relative">
+                        <span
+                          className={`absolute -left-[5px] top-2 w-2.5 h-2.5 rounded-full border ${
+                            session.scheduling_status?.toLowerCase() === "confirmed"
+                              ? "bg-joshway-cyan border-joshway-cyan"
+                              : session.scheduling_status?.toLowerCase() === "completed"
+                                ? "bg-emerald-400 border-emerald-400"
+                                : "bg-white/20 border-white/30"
+                          }`}
+                        />
+                        <div className="surface-card p-4 flex flex-wrap items-center justify-between gap-3">
+                          <div>
+                            <p className="font-semibold text-white text-sm">{session.session_title}</p>
+                            <p className="text-xs text-gray-400 mt-0.5">
+                              {formatMissionDate(session.session_date)} · {formatMissionTime(session.session_time)}
+                              {session.location ? ` · ${session.location}` : ""}
+                            </p>
+                          </div>
+                          {session.scheduling_status && (
+                            <span className={`badge-pill border text-xs capitalize ${statusTone(session.scheduling_status)}`}>
+                              {session.scheduling_status}
+                            </span>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              ))}
+            </div>
           ) : (
             sessions.map((session, idx) => (
               <article key={session.id} className="surface-card p-5">

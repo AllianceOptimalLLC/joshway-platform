@@ -12,3 +12,11 @@ export function maskPhone(phone: string): string {
   if (digits.length < 4) return "***";
   return `***-***-${digits.slice(-4)}`;
 }
+
+/** Mask a person's name to initials for display in federated preview (PII-safe UI). */
+export function maskName(first?: string | null, last?: string | null): string {
+  const f = (first ?? "").trim();
+  const l = (last ?? "").trim();
+  if (!f && !l) return "***";
+  return `${f ? f[0] + "." : ""}${f && l ? " " : ""}${l ? l[0] + "." : ""}`;
+}

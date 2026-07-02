@@ -13,6 +13,8 @@ import MissionProgramDetail from "@/pages/mission/MissionProgramDetail";
 import AcademyCourseShell from "@/pages/academy/AcademyCourseShell";
 import Course101 from "@/pages/academy/Course101";
 import CourseBridge from "@/pages/academy/CourseBridge";
+import MediaVault from "@/pages/academy/MediaVault";
+import ContactDetail from "@/pages/connect/ContactDetail";
 
 export default function App() {
   return (
@@ -53,7 +55,16 @@ export default function App() {
           >
             <Route index element={<Home />} />
             <Route path="academy" element={<ModuleGuard module="academy"><Academy /></ModuleGuard>} />
+            <Route path="academy/vault" element={<ModuleGuard module="academy"><MediaVault /></ModuleGuard>} />
             <Route path="connect" element={<ModuleGuard module="connect"><Connect /></ModuleGuard>} />
+            <Route
+              path="connect/contacts/:contactId"
+              element={
+                <ModuleGuard module="connect">
+                  <ContactDetail />
+                </ModuleGuard>
+              }
+            />
             <Route path="basecamp" element={<ModuleGuard module="basecamp"><BaseCamp /></ModuleGuard>} />
             <Route path="mission" element={<ModuleGuard module="mission"><Mission /></ModuleGuard>} />
             <Route

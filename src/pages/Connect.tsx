@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Plus, Search, LayoutGrid, List } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatCard } from "@/components/ui/StatCard";
@@ -14,9 +15,24 @@ const stageStyles: Record<string, string> = {
 };
 
 export default function Connect() {
+  const navigate = useNavigate();
   const [view, setView] = useState<"kanban" | "table">("kanban");
+  const [query, setQuery] = useState("");
+  const [stageFilter, setStageFilter] = useState<string | null>(null);
   const { data, isLoading } = useConnectPipeline();
   const pipeline = data ?? { source: "mock" as const, stages: [], contacts: [] };
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return pipeline.contacts.filter((c) => {
+      if (stageFilter && c.stage !== stageFilter) return false;
+      if (!q) return true;
+      const tags = "tags" in c && Array.isArray(c.tags) ? c.tags.join(" ") : "";
+      return `${c.name} ${c.company} ${tags}`.toLowerCase().includes(q);
+    });
+  }, [pipeline.contacts, query, stageFilter]);
+
+  const openContact = (id: string) => navigate(`/connect/contacts/${id}`);
 
   return (
     <div className="module-accent-connect space-y-8">
@@ -27,7 +43,11 @@ export default function Connect() {
         action={
           <div className="flex items-center gap-2">
             <DataSourceBadge source={pipeline.source} />
-            <button className="btn-primary">
+            <button
+              className="btn-primary opacity-50 cursor-not-allowed"
+              title="Contact creation ships with the federation gateway (Phase 1 security)"
+              aria-disabled
+            >
               <Plus className="w-4 h-4" /> New Contact
             </button>
           </div>
@@ -44,6 +64,8 @@ export default function Connect() {
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
             placeholder="Search contacts, companies, tags..."
             className="w-full pl-11 pr-4 py-3.5 rounded-2xl surface-card text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-joshway-purple/40"
           />
@@ -64,10 +86,48 @@ export default function Connect() {
         </div>
       </div>
 
+      {pipeline.stages.length > 0 && (
+        <div className="flex flex-wrap gap-2 -mt-4">
+          <button
+            type="button"
+            onClick={() => setStageFilter(null)}
+            className={`badge-pill border text-xs transition-colors ${
+              stageFilter === null
+                ? "bg-joshway-purple/20 text-white border-joshway-purple/40"
+                : "bg-white/5 text-gray-400 border-white/10 hover:text-gray-200"
+            }`}
+          >
+            All stages
+          </button>
+          {pipeline.stages.map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setStageFilter(stageFilter === s ? null : s)}
+              className={`badge-pill border text-xs transition-colors ${
+                stageFilter === s
+                  ? (stageStyles[s] ?? "bg-joshway-purple/20 text-white border-joshway-purple/40")
+                  : "bg-white/5 text-gray-400 border-white/10 hover:text-gray-200"
+              }`}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+
       {isLoading ? (
         <div className="surface-card p-12 text-center text-gray-500">Loading pipeline…</div>
+      ) : filtered.length === 0 ? (
+        <div className="surface-card p-12 text-center text-gray-500">
+          No contacts match{query ? ` "${query}"` : " this filter"}.
+        </div>
       ) : view === "kanban" ? (
-        <PipelineKanban stages={pipeline.stages} contacts={pipeline.contacts} />
+        <PipelineKanban
+          stages={stageFilter ? [stageFilter] : pipeline.stages}
+          contacts={filtered}
+          onSelect={openContact}
+        />
       ) : (
         <div className="table-shell">
           <table className="w-full">
@@ -80,8 +140,12 @@ export default function Connect() {
               </tr>
             </thead>
             <tbody>
-              {pipeline.contacts.map((c) => (
-                <tr key={c.id}>
+              {filtered.map((c) => (
+                <tr
+                  key={c.id}
+                  onClick={() => openContact(c.id)}
+                  className="cursor-pointer hover:bg-white/[0.03] transition-colors"
+                >
                   <td className="font-semibold text-white">{c.name}</td>
                   <td className="hidden sm:table-cell text-gray-400">{c.company}</td>
                   <td>

@@ -66,9 +66,12 @@ export function useConnectPipeline() {
         .select("id, first_name, last_name, company, stage_id, stages(name)")
         .limit(50);
       if (error || !contacts?.length) {
+        // Mock contacts must pair with mock stage names — live stage names
+        // (e.g. "Complete") don't match mock contact stages and would render
+        // contacts into nonexistent kanban columns.
         return {
           source: "mock" as const,
-          stages: stageList.length ? stageList : ["New", "Contacted", "Qualified", "Ready for DonorDock"],
+          stages: ["New", "Contacted", "Qualified", "Ready for DonorDock"],
           contacts: mockContacts,
         };
       }

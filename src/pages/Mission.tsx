@@ -1,15 +1,28 @@
-import { Calendar, ChevronRight, GraduationCap, Users, AlertTriangle } from "lucide-react";
+import { Calendar, ChevronRight, GraduationCap, Users, AlertTriangle, Receipt } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatCard } from "@/components/ui/StatCard";
 import { DataSourceBadge } from "@/components/ui/DataSourceBadge";
 import { useMissionData } from "@/hooks/useFederatedData";
+import { useMissionOps } from "@/hooks/useMissionOps";
 import { formatMissionDate } from "@/lib/mission/format";
+
+const payoutTone: Record<string, string> = {
+  paid: "bg-emerald-500/15 text-emerald-300 border-emerald-500/20",
+  payment_created: "bg-joshway-cyan/15 text-joshway-cyan border-joshway-cyan/25",
+  pending: "bg-amber-500/15 text-amber-300 border-amber-500/20",
+  submitted: "bg-blue-500/15 text-blue-300 border-blue-500/20",
+};
+
+function money(n: number) {
+  return n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+}
 
 export default function Mission() {
   const navigate = useNavigate();
   const { data, isLoading } = useMissionData();
   const mission = data ?? { students: [], programs: [], source: "mock" as const };
+  const { data: ops } = useMissionOps();
 
   return (
     <div className="module-accent-mission space-y-8">
@@ -108,6 +121,66 @@ export default function Mission() {
               ))}
             </div>
           </section>
+
+          {ops && (
+            <section>
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <h2 className="font-bold text-lg flex items-center gap-2">
+                  <Receipt className="w-5 h-5 text-amber-400" /> SME Payouts
+                  <span className="text-xs font-normal text-gray-500">read-only · names masked</span>
+                </h2>
+                <DataSourceBadge source={ops.source} />
+              </div>
+              <div className="grid sm:grid-cols-4 gap-3 mb-4">
+                <StatCard label="Invoices" value={String(ops.totals.invoices)} accent="amber" />
+                <StatCard label="Paid" value={String(ops.totals.paid)} accent="emerald" />
+                <StatCard label="Pending" value={String(ops.totals.pending)} accent="purple" />
+                <StatCard label="Outstanding" value={money(ops.totals.pendingAmount)} accent="cyan" />
+              </div>
+              <div className="table-shell">
+                <table className="w-full">
+                  <thead>
+                    <tr>
+                      <th>SME</th>
+                      <th>Status</th>
+                      <th className="hidden sm:table-cell">Amount</th>
+                      <th className="hidden md:table-cell">Verified</th>
+                      <th className="text-right">Checklist</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ops.payouts.slice(0, 8).map((p) => (
+                      <tr key={p.id}>
+                        <td className="font-semibold text-white font-mono">{p.smeMasked}</td>
+                        <td>
+                          <span className={`badge-pill border capitalize ${payoutTone[p.status.toLowerCase()] ?? "bg-white/5 text-gray-300 border-white/10"}`}>
+                            {p.status.replace(/_/g, " ")}
+                          </span>
+                        </td>
+                        <td className="hidden sm:table-cell text-gray-300">
+                          {p.amount != null ? money(p.amount) : "—"}
+                        </td>
+                        <td className="hidden md:table-cell text-gray-400">{p.verified ? "Yes" : "No"}</td>
+                        <td className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <div className="w-16 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-gradient-to-r from-amber-400 to-emerald-400 rounded-full"
+                                style={{ width: `${(p.checklistDone / p.checklistTotal) * 100}%` }}
+                              />
+                            </div>
+                            <span className="text-xs text-gray-500 w-8">
+                              {p.checklistDone}/{p.checklistTotal}
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
         </>
       )}
     </div>
